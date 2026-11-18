@@ -1,0 +1,196 @@
+{
+  "doc": "安装包载荷清单（唯一真源）。build-installer.ps1 只读这一份；排除口径直接复用 scripts/pack-exclude.json，不在这里复制第二份名单。",
+  "version": 2,
+  "stub": false,
+  "stageNote": "L1：载荷 = 完整产品（桥接 src + node_modules + 客户端 exe + DSH 预设 + 启动脚本），装完能在没有 Node 的机器上起桥接、客户端连上。node 运行时随包带 node.exe（约 92MB），不依赖目标机 PATH 里的 node。",
+  "product": {
+    "brand": "QQ DeepSeek Bot",
+    "exe": "QQDeepSeekBot.exe",
+    "installDir": "%LOCALAPPDATA%\\QQDeepSeekBot",
+    "setupName": "QQDeepSeekBot-Setup-{version}.exe",
+    "uninstallKey": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\QQDeepSeekBot",
+    "shortcut": "QQ DeepSeek Bot.lnk",
+    "notAffiliated": "非腾讯 / 非 DeepSeek 官方产品（Not affiliated with Tencent or DeepSeek）"
+  },
+  "excludeSource": "scripts/pack-exclude.json",
+  "clientExe": {
+    "from": "dist/desktop/QQDeepSeekBot.exe",
+    "to": "QQDeepSeekBot.exe",
+    "builtBy": "scripts/desktop/build-host.ps1（w6 T20/T23 真宿主）；宿主不可用时 build-installer.ps1 编译 scripts/installer/stub-client.cs 兜底"
+  },
+  "clientRuntime": [
+    {
+      "from": "dist/desktop/WebView2Loader.dll",
+      "to": "WebView2Loader.dll",
+      "why": "WebView2 加载器（宿主运行时依赖）"
+    },
+    {
+      "from": "dist/desktop/Microsoft.Web.WebView2.Core.dll",
+      "to": "Microsoft.Web.WebView2.Core.dll",
+      "why": "WebView2 .NET 绑定"
+    },
+    {
+      "from": "dist/desktop/Microsoft.Web.WebView2.WinForms.dll",
+      "to": "Microsoft.Web.WebView2.WinForms.dll",
+      "why": "WebView2 WinForms 控件封装"
+    }
+  ],
+  "nodeExe": {
+    "from": "<node 安装目录>\\node.exe",
+    "to": "node.exe",
+    "why": "目标机可能没有 Node 22+；只带 node.exe（自包含，不需要 node 安装目录里的其它文件），约 92MB，压进 payload.zip 后约 35MB",
+    "autoDetect": [
+      "(Get-Command node).Source",
+      "C:\\Program Files\\nodejs\\node.exe"
+    ]
+  },
+  "files": [
+    {
+      "from": "config.template.json",
+      "required": true,
+      "why": "唯一允许进包的配置：占位符模板，安装时复制成 config.json"
+    },
+    {
+      "from": "config.example.json",
+      "required": false,
+      "why": "示例配置（字段说明更全）"
+    },
+    {
+      "from": "package.json",
+      "required": true,
+      "why": "桥接运行入口与依赖声明（node_modules 已随包，不需要 npm install）"
+    },
+    {
+      "from": "package-lock.json",
+      "required": true,
+      "why": "依赖锁定（排查/重建用）"
+    },
+    {
+      "from": "README.md",
+      "required": true
+    },
+    {
+      "from": "README-COMMANDS.md",
+      "required": false
+    },
+    {
+      "from": "RULES.md",
+      "required": false
+    },
+    {
+      "from": "LICENSE",
+      "required": true
+    },
+    {
+      "from": "LICENSE.polyform-nc",
+      "required": false
+    },
+    {
+      "from": "start.bat",
+      "required": false,
+      "why": "手动启动入口"
+    },
+    {
+      "from": "restart.bat",
+      "required": false
+    },
+    {
+      "from": "start-bridge-forever.bat",
+      "required": false
+    },
+    {
+      "from": "_snowluma-catalog.json",
+      "required": false
+    },
+    {
+      "from": "scripts/installer/NOTICE.txt",
+      "to": "NOTICE.txt",
+      "required": true,
+      "why": "非官方声明（安装完成页与包内各一份）"
+    },
+    {
+      "from": "scripts/installer/post-install.ps1",
+      "to": "ops/post-install.ps1",
+      "required": true,
+      "why": "安装最后一步：生成/检查 config、起桥接、探测端口（真实包在这里跑 setup-dsh 的等价步骤）"
+    }
+  ],
+  "dirs": [
+    {
+      "from": "src",
+      "required": true,
+      "why": "桥接本体（src/bridge.js 入口）"
+    },
+    {
+      "from": "node_modules",
+      "required": true,
+      "why": "桥接依赖（随包带，目标机不需要 npm install）"
+    },
+    {
+      "from": "scripts",
+      "required": true,
+      "why": "setup-dsh / boot-smoke / 维护脚本"
+    },
+    {
+      "from": "public",
+      "required": true,
+      "why": "客户端页（含 T23/T24 的 360 窄屏布局）"
+    },
+    {
+      "from": "tools",
+      "required": false
+    },
+    {
+      "from": "docs",
+      "required": true,
+      "why": "交付/运维/排障文档"
+    },
+    {
+      "from": "dsh",
+      "required": true,
+      "why": "DSH preset 权威源（QQ 聊天角色），装完还没配 DSH 时也要在包内"
+    },
+    {
+      "from": "plugins",
+      "required": true,
+      "why": "DSH 侧 QQ 插件 bundle"
+    },
+    {
+      "from": "assets",
+      "required": false
+    },
+    {
+      "from": "delivery/ops",
+      "to": "ops",
+      "required": true,
+      "why": "start-all / stop-all / status-all 三件套"
+    }
+  ],
+  "generated": [
+    {
+      "to": ".installed.json",
+      "by": "installer",
+      "why": "幂等标记：版本 + 安装时间；二次安装不重复写配置"
+    },
+    {
+      "to": "config.json",
+      "by": "installer",
+      "why": "首次安装从 config.template.json 复制；已存在则保留"
+    },
+    {
+      "to": "logs/",
+      "by": "runtime",
+      "why": "安装器 post-install 与桥接运行时写日志（不进包）"
+    }
+  ],
+  "forbidden": [
+    "config.json",
+    "state/",
+    "logs/",
+    "audio/",
+    "*.log",
+    ".env",
+    "dist/",
+    "archive/"
+  ]
+}

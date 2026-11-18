@@ -1,0 +1,16 @@
+QQ DeepSeek Bot
+===============
+
+非腾讯 / 非 DeepSeek 官方产品（Not affiliated with Tencent or DeepSeek）。
+
+本项目是一个自托管的 QQ 机器人桥接 + 控制台 + 客户端窗口：
+- QQ 协议由第三方 OneBot 11 网关（如 SnowLuma）提供，与本项目无隶属关系；
+- 模型推理由 DeepSeek Harness（DSH）提供，与本项目无隶属关系；
+- 本项目不包含、也不分发上述任何第三方软件本体（Node.js / DSH / SnowLuma 需自行安装）。
+
+使用第三方软件时请遵守其各自的许可与服务条款；QQ 账号风险由使用者自行承担。
+
+本安装包内置的客户端窗口基于 Microsoft Edge WebView2 运行时（免费，需单独安装）。
+
+许可与来源见包内 LICENSE。安装器与构建脚本为自研，未签名（no code signing certificate），
+首次运行时 Windows SmartScreen 会提示"未知发布者"，属预期行为。

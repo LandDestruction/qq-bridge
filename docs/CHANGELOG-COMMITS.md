@@ -1,0 +1,365 @@
+# 提交全量清单（2026-10-25 00:00 起，共 361 条）
+
+> 自动生成：`git log`；按模块叙事见 `docs/CHANGELOG.md`。
+
+- `6644ce9` 10-26 12:12  fix: 恢复回合定时器遍历 state.sessions 用了 for...of（对象）导致桥接 exit 1；改 Object.entries
+- `d219ec8` 10-26 12:09  fix: 恢复的回合只给 90s 宽限（DSH 重启后回合常已死，按 10 分钟租约算忙会导致整群叫不动），到期自动补推排队唤醒
+- `a12fbcc` 10-26 12:06  peak: 高峰期只切模型、不再拦截消息（拦截会导致识图/语音/画画/摸头全失效）；模型切到 xiaomi-mimo/mimo-v2.6-pro
+- `d4f6357` 10-26 12:02  debug: socialV2.debugInbound 打印入站群消息（排查高峰/白名单消息是否到达 handleIncoming）
+- `0e083ba` 10-26 11:36  peak: 高峰放行后显式 scheduleWakeV2('peak')（此前放行但不唤醒，等于什么都不做）；sendWakePromptV2 允许 reason=peak 穿过高峰拦截
+- `beac03f` 10-26 11:34  peak: 高峰期改为 agent + xiaomi-mimo/mimo-v2.6-pro（保留识图/语音/画画/摸头工具），闸门照旧；只放行白名单群，并强制切换会话模型
+- `28c7286` 10-26 11:17  docs(config.example): peakPause.localModel 改为 OpenAI 兼容 provider（MiMo）示例
+- `e08bd38` 10-26 11:16  peak: 高峰期聊天模型换成小米 MiMo（OpenAI 兼容，mimo-v2.6-pro，thinking 关闭 1.7~2.4s），不再用本地 ollama；provider 可配（openai/ollama），测试补 3 项
+- `136965e` 10-26 10:54  peak-local: 非白名单群跳过日志每小时一行（避免逐条刷屏）
+- `624c1ea` 10-26 10:52  peak-local: 止血刷屏——只在 @/点名、问句或 8% 概率时接话，同群 20s 冷却、10 分钟上限 5 条、30 分钟内不重复同一句；prompt 增加「不复读/只回最后一条」；默认模型换 qwen2.5:7b（预热 150~230ms）
+- `14308a9` 10-26 10:43  peak-local: 只限白名单群 + 语气重写兜底（冲话重写一次、仍冲则放弃）+ 本地回复统计进 /api/status.peakLocal
+- `0d5ebf3` 10-26 10:37  merge feat/file-archive: 降级通知取并集——只写日志 + 一小时内去重（保留 C 的可用模型清单）
+- `2a98796` 10-26 10:37  merge feat/audio: regression 清单取并集（peak-local-all + peak-tone + simple-booth-dir）
+- `e642b48` 10-26 10:37  Merge branch 'feat/backend'
+- `b5ce795` 10-26 10:37  fix(model): 自动回退只写日志，不再私聊管理员（用户明确要求）
+- `4d9d51b` 10-26 10:35  docs: 本地小模型语气交接（改前/改后样例、8 场景冲度表、配置键、回滚）
+- `0e20dd7` 10-26 10:35  test: 新增语气评测 test-peak-tone（8 场景 + --live 冲度评分表）+ probe 支持 3 场景；回归纳入（验证：离线 5/5、--live 8/8 平均冲度 0、regression-all 48/48）
+- `0986a61` 10-26 10:35  tests: 增加 bridge 降级/恢复路径静态断言（recordModelFailure/notifyModelAutoFallback/noteExternalTurnOk 均无 sendToQQ）＋planFallback 假 send 0 次（验证：test-model-fallback 59/59）
+- `b564ae0` 10-26 10:35  peak-local: temperature 0.8 → 0.6（numPredict 120 / think:false 不变；验证：test-peak-tone 默认值断言 + 真机输出）
+- `4738077` 10-26 10:35  peak-local: 重写语气 prompt（温和/不命令/不评价/不复述，含 few-shot）+ persona/styleExtra 追加（验证：probe 3 条前后对比、test-peak-tone --live 8/8）
+- `1d2fa1f` 10-26 10:34  ops+console: 高峰期本地模型可见（ops 面板：本地/API 模式·模型·窗口·近 1h 回复·平均耗时·最后一条，缺字段写「后端未提供」；用量页一行高峰期文案两接口都挂则隐藏）（验证：static 547 项；failpaths 181 项含 peak 4 故障 + 缺字段 + 高峰线隐藏；fixture 渲染文本已核对）
+- `8dcbded` 10-26 10:33  tests: 降级链末尾官方 DeepSeek + 降级不私聊管理员（假 send 0 次）覆盖（验证：test-model-fallback 55/55）
+- `705ee99` 10-26 10:33  fallback: 降级/恢复通知只写日志不再私聊管理员（planFallback 纯函数 + 「第 N 次/原因」日志；保留 notifyOwnerOnError 原语义）（验证：node --check + test-model-fallback 55/55 + grep 降级相关 sendToQQ 0 处）
+- `04a4710` 10-26 10:33  fallback: 降级链末尾固定官方 DeepSeek（配置最后一项不参与 provider 交错，永远最后兜底）+ config.example/DEGRADATION 同步（验证：node --check + test-model-fallback 链路排序用例）
+- `4b63788` 10-26 10:32  peak-local: replyToAll 回复所有人 + 护栏与限频接入桥接（验证：test-peak-local 8 项 + test-peak-local-all 5 项 + regression-all 48/48）
+- `1c6e596` 10-26 10:30  peak-local: replyToAll（默认回复所有人）+ 护栏（minChars/skipMediaOnly/每分钟6/每小时60）+ shouldPeakLocal 接受 text/hasMedia（未接桥接）
+- `a36c06b` 10-26 10:21  peak: 定时唤醒/首轮 bootstrap 在高峰期不再打 API（实测 10:05 仍有 replyCheck 绕过高峰闸门）；管理员手动唤醒保留
+- `9b8ca1e` 10-26 10:20  peak-local: 回复正文写入日志（可逐字对照 QQ）+ 记入会话历史（下一轮本地模型有上下文）
+- `14cae00` 10-26 10:02  peak-local: @ 识别兜底 get_login_info（SnowLuma 部分事件不带 self_id，导致管理员 @ 也被判成没叫机器人）
+- `9c3f6fc` 10-26 10:01  peak-local: 拒绝日志带 uid/role/mentioned，便于线上判断是角色问题还是没 @ 到
+- `0b6fee2` 10-26 10:00  peak-local: 增加 userIds 显式放行（实测管理员 QQ 100000006 在各群是 member，纯靠 role 会全部拒绝）；单测补 3 条矩阵
+- `66a968a` 10-26 09:59  peak: 高峰期群聊交给本地小模型（qwen3:8b, think:false，仅群主/管理员且需 @/点名）；空闲期仍走 API。新增 peak-local 模块 + 8 项单测 + 真机探针（实测 7.4s/20 tokens 可用），regression 47/47
+- `38ce6df` 10-26 09:48  fix(peak): enabled 作为总开关——关掉后 schedule 不再单独触发群聊暂停（实测 09:42 群 @ 无反应、私聊正常；/api/peak/status 显示 enabled=false 却 active=true）
+- `989d3a5` 10-26 09:11  log: 新会话首条消息/首次拍一拍走 bootstrap 时打印「该消息本身触发源」，不再让人误以为机器人无故说话；docs: 新增 PROJECT-OVERVIEW（系统清单/依赖/文件/统计/打包）；scripts: pack-project.ps1 干净打包
+- `c009352` 10-26 07:06  merge feat/booth-dir: CHANGELOG 补记
+- `ad98665` 10-26 07:06  docs: CHANGELOG 4.4 补 simpleMode 按 7 位 BOOTH 号归档的线上变更
+- `27b3723` 10-26 07:06  merge feat/booth-dir: 交接补上线记录
+- `4040ed4` 10-26 07:06  docs: 交接补上线记录（已合并/已重启/存量 8 个已归类、空年月目录已删）
+- `3306ac9` 10-26 07:05  merge feat/booth-dir: 迁移脚本 sidecar 修复（台账失效引用保留原值 + 按文件名兜底搬）
+- `1abd664` 10-26 07:05  fix(migrate): 台账 meta_rel 失效时保留原值，并按文件名搬同目录 sidecar（验证：test-simple-booth-dir 含失效引用用例）
+- `101026d` 10-26 07:04  merge feat/booth-dir: simpleMode 转存按 7 位 BOOTH 号归到同名文件夹
+- `b44d97a` 10-26 06:55  archive(simpleMode): 转存按文件名开头的 7 位 BOOTH 号归到同名文件夹（验证：test-simple-booth-dir 全过、存量迁移预演/apply 幂等、regression-all 46/46）
+- `80fe729` 10-26 01:02  docs: 全量改动日志（CHANGELOG.md 按模块叙事 + CHANGELOG-COMMITS.md 318 条提交清单）
+- `15360bd` 10-26 00:56  fix: /api/library/* 500（buildLibraryItems is not defined）—— 合并漏了 library-items.js 的 import（同 observeApiView / image-thumb 一类）
+- `e45f284` 10-26 00:55  merge feat/file-archive: regression-all 套件清单取并集（A 的 library-items + C 的 booth-classify/merge/errors/cover）
+- `74773b2` 10-26 00:55  Merge branch 'feat/frontend'
+- `808c1f2` 10-26 00:55  Merge branch 'feat/backend'
+- `00b9bc3` 10-26 00:33  scripts: 存量迁移到 simpleMode 新布局（合规→<群号_群名>/<YYYY-MM>/，其余→_未分类/<群号_群名>/），逐条 sha256 校验，DB 先备份
+- `cd20bc8` 10-26 00:19  Merge branch 'feat/audio'
+- `c7538cf` 10-26 00:15  archive(simpleMode): 目标改为指定根目录(默认 E:/booth-inbox) + <群号_群名>/<YYYY-MM>/ 布局；群名走 get_group_info 缓存到 state/group-names.json（缓存预热）；图片同布局
+- `0854a71` 10-25 23:57  video: reserved2 唤醒快照也补「视频语音转写中，稍后补给你」事实（验证：test-video-stt-flow 4/4、test-token-economy 36/36、test-audit-bridge）
+- `b0f5490` 10-25 23:57  Merge branch 'main' into feat/file-archive
+- `cd57d5e` 10-25 23:57  booth: 商品 cover 抓取（og:image 优先，长边≤512/≤200KB，state/booth-cache/<id>/cover.jpg 缓存30天）+ 同号图片归属 matchImageBooth + 商品只从压缩包派生（验证：test-booth-cover 4 项 + test-booth-merge 7 项 + test-booth-parse/meta/classify/errors/archive 19/13/12/6/11 全过 + test-audit-bridge 全 PASS + e2e 9038753 cover 512x512/70246B）
+- `3c17db0` 10-25 23:56  test: 回归纳入 4 个 STT 套件 + 交接文档（实测冷/热、配置键、回滚）（验证：regression-all 37/37）
+- `bcb3e49` 10-25 23:56  video: 桥接接入常驻 STT 服务（本轮只等 6s）+ 迟到主动补发 + 诚实话术 + /api/status sttService（验证：test-stt-wiring、test-video-stt-flow 3/3）
+- `78636f0` 10-25 23:56  video: 新增迟到转写主动补发协调器（诚实「转写中」话术、每视频只发一次、状态持久化、minGap）（验证：test-video-followup 10/10）
+- `18c0a93` 10-25 23:56  stt: 新增常驻转写服务与桥接客户端（/health、/transcribe、空闲卸载、路径白名单、懒启动、CLI 回退）（验证：test-stt-service 7/7；真实 16s 视频冷 4.7s / 热 1.6s）
+- `a82d616` 10-25 23:54  public: 库页改为 BOOTH 商品卡片（只收压缩包，图片仅作详情素材）+ 未分类双栏人工归类 + 封面走 /api/library/item-thumb 失败占位 + 筛选排序分页（验证：static 527 项；failpaths 168 项含库页 items 404/坏JSON/超时、unclassified 500、封面占位；fixture 渲染 2 商品/2 压缩包/2 同号图/未分类各 1 已打印核对）
+- `e833967` 10-25 23:54  fix(simpleMode): normalizeFileArchiveConfig 显式搬运 simpleMode（loadConfig 白名单构造会丢新键，实测开了 simpleMode 清理照跑）；simpleMode 下不初始化 BOOTH 归类
+- `735946c` 10-25 23:53  archive: 新增 simpleMode 兜底模式——只收文件名以 7 位 BOOTH 号开头的压缩包/图片，跳过 BOOTH 抓取/自动分类/自动清理（用户自己整理）；线上已开启
+- `341c011` 10-25 23:52  library: 以商品为单位的卡片库（/api/library/items、item/:boothId、unclassified、item-thumb）+ 同号图片回填（脚本+启动补跑）+ 契约（验证：test-library-items 6/6、regression-all 37/37）
+- `217f636` 10-25 23:51  merge main：并入库接口/缩略图缩放/分类移动测试；bridge 冲突取两侧并集（保留 moveArchiveItemToCategory + main 的 filter/sort/planCategoryMove 与 image-thumb 缩放）（验证：node --check + test-audit-bridge 全 PASS + test-booth-archive 11/11）
+- `ed33992` 10-25 23:49  docs: BOOTH Library Manager 逆向笔记（数据模型/抓取/解析/UI 结构，含可直接照搬与不照搬的清单）
+- `b9320d9` 10-25 23:40  fix: /api/files/thumb 500（normalizeThumbWidth is not defined）—— 合并时漏了 image-thumb.js 的 import（和 observeApiView 同类问题）
+- `0052f50` 10-25 23:40  console: 新增 /library 页面路由 + 缩略图对无 thumbRel 的图片回落到原图（此前库里图片条目 thumb 全 404，库页会整片空白）
+- `fd3d550` 10-25 23:38  Merge branch 'feat/frontend'
+- `e4ef5d2` 10-25 23:38  Merge branch 'feat/backend'
+- `5cea370` 10-25 23:37  booth: 人工分类真正移动目录（未分类工作流，meta/缩略图同搬、空目录回收、失败降级）（验证：test-booth-merge 5/5 + test-booth-classify 12 + test-booth-errors 6 + test-booth-archive 11 + test-booth-meta 13 + test-booth-parse 19 + test-audit-bridge 全 PASS + test-file-archive/test-chat-file-archive 全过）
+- `9366608` 10-25 23:34  booth: 缩略图 512 JPEG 规格化+按需 w、分类映射表、gated/failed/not_found 边界、meta.files 合并、thumb_status 迁移、e2e 脚本（验证：test-booth-classify 12 项 + test-booth-merge 3 项 + test-booth-errors 6 项 + test-booth-parse/meta/archive 19/13/11 全过 + test-audit-bridge 全 PASS + e2e 9038753 512x512 70KB）
+- `38ecc71` 10-25 23:32  public: 新增 BOOTH 风格文件库页 library.html（侧栏 Home/Lists/Notify/Library/Settings + 搜索/筛选/排序 + 卡片网格懒加载缩略图 + 分页 24/48 + 详情抽屉改分类/重新抓取 + 导出 JSON/CSV；接口未就绪处本地推导降级）（验证：static 525 项；failpaths 166 项含库页 4 种故障；fixture 渲染 120 条：侧栏计数/分页/四视图文本已打印核对）
+- `6413013` 10-25 23:30  files: 缩略图 ?w= 服务端缩放 + 改分类同步移动目录（失败回滚）+ 契约文档补齐 lists/notify/item（验证：test-image-thumb 4/4、test-category-move 4/4、regression-all 36/36）
+- `4502fc9` 10-25 23:30  video: 引用里的视频也抽帧/转写（此前直接 skip，导致引用视频问内容必然得到「听不到」）——挂临时消息跑 enrichVideoFile，25s 上限，没赶上如实标注 pending
+- `8bee165` 10-25 23:29  files: 库管理器后端（q/category/shop/status/sort 过滤、/api/files/lists、/api/files/notify、/api/files/item）（验证：test-files-library-api 7/7 + regression-all 33/33）
+- `b5879d6` 10-25 23:25  merge feat/backend: bridge import 冲突取并集（createStagedTask + observeApiView）
+- `8c01e78` 10-25 23:19  video: 两段等待（帧≤8s、转写≤stt.waitMs 默认90s）+ videoModel 默认 small + 迟到转写补发 + 量化日志 + maxChars 可配（验证：test-async-wait 6/6、test-tts-ext 静态断言、regression-all 29/29、离线 speech-video.mp4 转写有字 6002ms）
+- `445db6c` 10-25 23:19  fix: /api/observe/config 500（observeApiView is not defined）—— 合并时漏了 bridge 侧的 import，补上并跑 test-api-contract-files
+- `4802cdb` 10-25 23:17  merge feat/file-archive: regression-all 套件清单取并集（A 的 malformed/attachment/booth-meta/async-wait/api-contract + C 的 booth-parse/booth-archive/sticker-persist/sticker-repair）
+- `ad8f845` 10-25 23:17  merge feat/frontend: 冲突取 B 侧（console failpaths 156 项、FIXES 追加）
+- `199eebb` 10-25 23:12  console: 按群分组明细兼容 byGroup 三态 + 台账改真 offset 分页（20/50/100、页码夹边界、显示 A–B/共 N）+ 观察学习按 enabled 判有效（线上无 ok 字段，修复「未知/接口不可用」）（验证：static 486 项；failpaths 156 项；真桥接渲染：1 个群 / 共 11 条 / 观察已启用 100000005）
+- `069e4fa` 10-25 23:09  merge main(cf62f75)：保留 main 的 md5 去重/新测试，booth-meta 取本分支超集（含 A 的 parseBoothItem/sniffBoothIds/boothCacheFresh 契约）；regression-all 追加 booth/sticker 套件（验证：node --check + test-booth-parse 19 项 + test-booth-meta 13 项 + test-booth-archive 11 项 + test-sticker-persist 9 项 + test-sticker-repair 5 项 + test-sticker-dedupe 8 项 + test-sticker-thumb(s) 20/20 + test-audit-bridge 全 PASS + test-chat-file-archive/test-file-archive/test-observe-learn 全过 + A 探针实跑 9038753 JSON 200）
+- `35e4c1c` 10-25 23:08  chore: 恢复被误删/误改的非本批次文件（dedupe-stickers / repair-sticker-thumbs / start-bridge-hidden.vbs / sticker-lib.js 全部对齐 main）
+- `1768377` 10-25 23:07  booth+sticker: 恢复仓库迁移前的 c6/c7 工作（BOOTH 解析/抓取/分类布局/meta.json/字段迁移/API + 采集即落盘；验证：node --check + test-booth-parse 19 项 + test-booth-meta 13 项 + test-booth-archive 11 项 + test-audit-bridge 全 PASS + test-chat-file-archive 全过）
+- `e241ec3` 10-25 23:07  api: 钉死文件台账/观察学习的响应契约（byGroup 恒数组、limit 夹取、offset 回显、effectiveGroups）+ docs/api-contract-files.md（验证：test-api-contract-files 11/11、regression-all 29/29）
+- `cf62f75` 10-25 22:59  Merge branch 'import-b2'
+- `51b6a48` 10-25 22:59  Merge branch 'import-a2'
+- `0cda035` 10-25 22:59  docs: BOOTH 研究补「需要拍板的问题」与复现清单、视频根因五选一结论（补齐 msg-a47/a48 的交付要求）
+- `4c941cc` 10-25 22:57  media: prompt 组装前对视频抽帧/转写做有限等待（≤20s），首轮不再缺转写（验证：test-async-wait 4/4、test-tts-ext 新增静态断言、regression-all 28/28）
+- `a4619c6` 10-25 22:55  ops: 表情注释页收尾（去重展示 + 缩略图来源链 thumb(md5)→thumbnail(id)→CDN→占位 + thumbStatus=missing 直接失效占位「源链接已过期」+ 删除该条 + 只看失效筛选 + 共 N 用接口 total 并显示「其中失效 N 条」）（验证：static 479 项 / failpaths 143 项 / test-sticker-thumb 20 / test-sticker-thumbs 20 / test-sticker-dedupe 8 全过）
+- `90e6495` 10-25 22:55  scripts: 新增视频音轨/转写离线探针（40s 中文语音 mp4 → extractAudioWav → transcribeWav 实测有转写）
+- `8276fa8` 10-25 22:54  booth: 抽出可离线测试的 booth-meta 纯逻辑（解析/嗅探/缓存 TTL），探针复用同一 parser（验证：test-booth-meta 6/6 用真实 fixture；探针实跑 9038753 输出不变；regression-all 27/27）
+- `621e084` 10-25 22:52  media: 统一附件类型判定（含引用/文件段），视频不再被当图片抓取（验证：新 test-attachment-classify 9/9、test-tts-ext 三条静态断言、regression-all 26/26）
+- `907b9b5` 10-25 22:50  docs: 视频无声根因分析（video-file 分流遗漏 + enrich/prompt 竞态 + 上一轮残留帧）
+- `37bf88b` 10-25 22:50  media: video-file 不再走图片抓取路径；补视频转写诊断与摘要回填（验证：test-tts-ext 新增静态断言通过、regression-all 25/25、node --check src/bridge.js）
+- `0480632` 10-25 22:48  Merge branch 'main' into feat/frontend
+- `6e12ad2` 10-25 22:46  docs: BOOTH 元数据/抓取/嗅探研究 + booth-item.schema.json + 抓取探针与 fixture（验证：探针实跑 9038753 返回 title/shop/price/category/tags/isAdult；.json 端点与 Accept: application/json 两种方式均 200 实测）
+- `483f967` 10-25 22:43  launcher: start-bridge-hidden.vbs ROOT 指向 E:\deepseek-harness（迁移后 C 盘启动器也要能拉起 E 的桥接）
+- `35d646c` 10-25 22:42  Merge branch 'import-a'
+- `c26b6c7` 10-25 22:41  ops: 表情页接后端 thumbStatus=missing（直接占位「源链接已过期」+ 删除该条 + 重新采集提示）；只看失效筛选；共 N 用接口 total 并显示「其中失效 N 条」（验证：static 479 项；failpaths 143 项；test-sticker-thumb 20 项含 missing/删除/total；其余套件无回退）
+- `3cdde95` 10-25 22:37  sticker: load/merge dedupe by md5 (prefer entries keeping md5+cache) + ops scripts to dedupe store and re-fetch thumbnails; fixes duplicate cards and most broken thumbs
+- `0cc73c5` 10-25 22:36  ops: 表情注释去重（面板侧 md5 合并 + 合并重复按钮）+ 缩略图来源链（本地 md5 路由→thumbnail→CDN→占位）+ 仅看失效（验证：static 471 项；failpaths 143 项；test-sticker-dedupe 8 项；test-sticker-thumb 14 项；test-sticker-thumbs 20 项）
+- `3aa0cf8` 10-25 22:29  model: malformed 纯文字轮优先切 pro、含图轮保持视觉模型；补视频/本地兜底现状文档
+- `de600c0` 10-25 22:26  model: malformed tool-call JSON 识别 + 本轮重试两次（同模型→换模型→中性提示）（验证：新 test-malformed-retry 5/5 + regression-all 25/25 + node --check src/bridge.js 通过；线上行为未实测）
+- `2cef0f3` 10-25 22:24  ops: 表情注释缩略图改三级兜底（本地缓存→原始URL一次→占位文案）+ 单卡/批量「重新拉取」（POST /api/stickers/repair）+ 列表失败文案含接口与状态（验证：内联脚本 3/3；static 458 项；failpaths 139 项含表情面板 4 故障；test-sticker-thumbs 19 项）
+- `563c54e` 10-25 20:56  ledger: priceOf 改纯函数，unpriced 计数移到摄入侧（修「空 model」日志刷屏）（验证：L2 test-token-usage 全通过（新增：摄入 1 条→1 条日志、summary/series 各 100 次→日志仍 1 条、再摄入 99 条→只多 1 条、stats.unpricedSamples=100）+ test-token-economy 36/36 + regression-all 24/24）
+- `9887096` 10-25 20:49  media: HEIC/HEIF 走 ffmpeg 转码 + 逐图失败可见并写进给模型的说明（验证：L2 scripts/test-heic 5/5（识别 4 种 brand、成功、失败带 exit/stderr、ffmpeg 缺失、超时）、test-audit-bridge 14 PASS、test-vision-media 2/0、regression-all 24/24）
+- `4a9e67c` 10-25 20:46  Merge branch 'feat/backend'
+- `e6fe77b` 10-25 20:46  media: 抓取上限与送模型预算分离（修「大一点的图都看不了」根因）（验证：L2 test-audit-bridge 14 PASS、test-vision-media 2/0、test-safe-fetch-bounded 10/0、regression-all 23/23；真实大图链路未在线上实测）
+- `b182054` 10-25 20:45  probe-vision: 支持 PROBE_IMAGE/PROBE_QUESTION/PROBE_MEDIA_TYPE，用真实任意图片复现问题（验证：4000x3000 JPEG 683KB 发给 deepseek-account/deepseek-flash，模型准确描述画面；证明大图不是模型侧拒绝，问题在桥接 8MB 抓取上限之前）
+- `0a48738` 10-25 20:43  ledger: 空 model 采样一律计 0 成本（用户拍板）（验证：L2 test-token-usage 全通过（fixture 改为带 model，空 model 场景由 priceOf 返回 0）、test-token-economy 36/36、regression-all 23/23）
+- `e68fc96` 10-25 20:40  archive: 上限按 2.5GiB=2560MB（原 2500 会把用户配置 2560 静默夹掉）；stats 的 disk 字段在 state/files 尚未创建时沿祖先找目录取 statfs（原来直接 ENOENT 返回 null，控制台只能显示未知）
+- `3c9fd79` 10-25 20:39  file-archive: 合并 main 后去重（ARCHIVE_EXTENSIONS 重复声明导致所有测试 SyntaxError）；口径常量改为从主白名单派生（IMAGE_EXTENSIONS.concat(['tif','tiff'])）避免两处漂移
+- `a0a7dd7` 10-25 20:38  merge main into feat/file-archive：合并冲突（只保留 disk-guard 与 observe-learn 两侧的 import，isObserveGroup/describeObserveStickerSegments 是 C 侧新增，D I S K 三个是 A 侧新增）
+- `f035d13` 10-25 20:37  Merge branch 'feat/backend'
+- `656357a` 10-25 20:37  Merge branch 'feat/frontend'
+- `034214a` 10-25 20:36  console: 文件台账加筛选（群/分类/文件名，隐藏行过滤不丢编辑态）+ 统一失败文案（接口+方法+状态+原文）+ 可访问性收尾（skip link/全局 focus-visible/aria-live/标题层级）+ 修启动期 TDZ（files 常量改 var）（验证：node --check 3/3；static 444 项；failpaths 131 项）
+- `37f3f2e` 10-25 20:34  files: stats 增加 disk/accept 字段，files 增加 offset/total 分页（验证：L2 test-file-archive 全部通过（新增假 db 分页断言 + 常量同源断言）、test-audit-bridge 14 PASS、test-dsh-endpoint 31/0、regression-all 23/23）
+- `650ec29` 10-25 20:33  verify-after-restart: 修脚本自身两个误判（token 只读 config 导致 401；「忽略未授权会话」把启用前历史行算进失败）——修后 7/7 全过（token 回落 state/console-token；判据只看本次启动后的日志）
+- `5b4cb2f` 10-25 20:32  file-archive: 转存范围收窄为图片+压缩包（表情包绝不转，跳过有折叠日志）+ 上限 2.5GB 与真流式落盘（验证：node --check + test-chat-file-archive 24 项 + test-file-archive 18 项 + test-observe-learn 14 项 + 既有套件全过）
+- `20fca20` 10-25 20:32  Merge branch 'feat/backend'
+- `f70ab2b` 10-25 20:31  Merge branch 'feat/frontend'
+- `b1e0ead` 10-25 20:31  test: 新增重启后一键验收 scripts/verify-after-restart.mjs + docs 显式阻塞节（验证：实跑输出 2/7 项通过，未通过项正是「未重启」所致：observe.enabled/groups/description 与 11 次「忽略未授权会话」）
+- `87a7c86` 10-25 20:31  Merge branch 'feat/backend'
+- `3467e1c` 10-25 20:30  observe: 补提交观察群探针 scripts/observe-probe.mjs（之前漏提交，一直未跟踪）（验证：node --check 通过；实跑--since 30 输出未授权会话日志与 messages.db 条数判定）
+- `e6bcf85` 10-25 20:30  archive: 下载前磁盘护栏（2.5GB+5GB 预留）+ 空 model 采样定位日志（验证：L2 scripts/test-disk-guard 6/6、test-token-usage 全通过、test-file-archive 全部通过、test-media-queue 通过、test-audit-bridge 14 PASS）
+- `13a8b6e` 10-25 20:29  console: 转存面板跟上新口径（maxFileMb 动态/范围说明/50GB 容量提示）+ 分类下拉（未知值兜底）+ 可访问性（focus-visible/aria-live/清理 dialog 焦点管理/Esc/行 aria-label）（验证：node --check 3/3；static 432 项；failpaths 131 项；fixture 手核 maxMb/50GB/未知分类）
+- `d8ee413` 10-25 20:28  file-archive: 图片/引用附件也转存 + 每轮注入转存事实（禁止编成功）+ 观察群表情无 url 兜底与诊断（验证：node --check + test-chat-file-archive 20 项 + test-observe-learn 14 项 + 既有套件全过）
+- `c5ddcd2` 10-25 20:28  imagegen: 提示词翻译本地优先，本地不可用才回落主模型专用会话（验证：L1 node --check src/bridge.js + L2 test-regression-guards 11 条全过、test-imagegen-tiered 通过、test-audit-bridge 14 PASS、regression-all 23/23）
+- `a4ee698` 10-25 20:26  test: 新增 10 条反向断言（今天修过的 bug 不许重新出现）（验证：node scripts/test-regression-guards.mjs → 🎉 反向断言全部通过（10 条）；regression-all 23/23 通过）
+- `b96d40b` 10-25 20:25  test: 静态断言 config.example.json 每段都在 loadConfig 里搬运（防 imagegen 那类「段没搬导致运行时 undefined」）（验证：node scripts/test-config-transport.mjs 输出「24 个；未搬运：0 个 / ✅ 所有配置段都有显式搬运」；regression-all 加入该套件后 22/22 通过）
+- `9338b37` 10-25 20:24  test: 新增一键回归 scripts/regression-all.mjs（验证：实跑输出「✅ 21/21 套件通过」并跳过 test-dsh-session-retire（需活 DSH 控制 socket））
+- `5bfd3bf` 10-25 20:24  test: 静态断言 /api/observe/config 路由存在（验证：node scripts/test-tts-ext.mjs 输出「✅ GET /api/observe/config 路由存在」）
+- `088d92d` 10-25 20:24  docs: 补 2026-10-25 收尾批次对照表（7 个提交逐条给可复现验证命令）（验证：文档内验证命令均已实跑）
+- `6e46673` 10-25 20:23  diag: tool-calls-by-turn 对旧日志的「×N」显式告警 + docs 补口径说明（验证：node --check scripts/tool-calls-by-turn.mjs；实跑 --dup 输出「⚠️ 有 5 组没有 turn 字段…」与「含重复调用的轮次（仅统计有 turn 的组）：0」）
+- `6d5afaa` 10-25 20:23  observe: 观察群禁止出图（生成前就拦，不是发出去才拦）（验证：L2 scripts/test-tts-ext 新增静态断言「观察群出图守卫必须位于 /api/socialV2/draw 路由内」通过 + test-imagegen-tiered 通过 + test-audit-bridge 14 PASS）
+- `4fd7838` 10-25 20:22  Merge branch 'main' into feat/file-archive
+- `2863273` 10-25 20:22  docs: 补本窗口第 1 轮的三条修复证据（取图缓存/工具按轮归因/观察群顺序）（验证：文档内命令均已实跑，输出见条目）
+- `bb9b9dc` 10-25 20:21  file-archive: 单文件上限提到 2.5G（2560MB）并改为流式落盘，避免大文件读入内存 OOM（验证：node --check + test-chat-file-archive 17 项 + test-safe-fetch-bounded 10 项 + 既有套件全过）
+- `37adfed` 10-25 20:18  observe: 新增只读接口 GET /api/observe/config（enabled/groups/description 自查）（验证：L1 node --check src/bridge.js + L2 test-audit-bridge 14 PASS、test-dsh-endpoint 31/0）
+- `d921b79` 10-25 20:18  diag: tool-calls.jsonl 增加 turn 归因 + 按轮统计脚本（验证：L1 node --check src/bridge.js scripts/tool-calls-by-turn.mjs + L2 test-audit-bridge 14 PASS、test-dsh-endpoint 31/0、test-token-economy 36/36；脚本对线上真实日志跑出分组，旧日志 turn=? 属预期）
+- `cd29ada` 10-25 20:17  media: 网关取图加缓存，同一文件不再重复抓（test-token-economy 36/36 转绿）（验证：L2 test-token-economy 36/36（原 35/36）、test-media-search 全部通过、test-audit-bridge 14 PASS）
+- `19df0cd` 10-25 20:16  observe: 观察群在「未授权会话」闸门之前被接住，消息不再被丢掉（验证：L2 scripts/test-tts-ext 新增静态断言「observeLearnFromGroupMessage 必须出现在 忽略未授权会话 之前」通过 + test-observe-learn 全通过 + test-audit-bridge 14 PASS、test-dsh-endpoint 31/0）
+- `abe0f06` 10-25 20:15  Merge branch 'feat/file-archive'
+- `e0779e2` 10-25 20:14  bridge: 聊天 file 段也转存（同一套台账/目录规则）+ 给模型补齐自动转存能力提示（验证：node --check + test-chat-file-archive 13 项 + test-file-archive/test-observe-learn/test-audit-bridge/test-storage-card/test-media-queue/test-archive 全过）
+- `68bd4a0` 10-25 20:11  console: 观察学习两格点亮（GET /api/observe/config；未启用时 description 为 null 显示「未启用」、groups 照实显示并注明不生效、新增学习项 ✓/✗）（验证：node --check 3/3；static 419 项；failpaths 131 项；fixture 手核启用/未启用两种渲染）
+- `74de150` 10-25 20:10  observe: 新增只读 GET /api/observe/config（B 的控制台面板此前只能显示「未知」：cfg.observe 只在内部用、零接口暴露）（验证：node --check + test-audit-bridge 14 PASS；重启后 curl 实测 401→带 token 200）
+- `500f8c9` 10-25 20:09  Merge branch 'feat/frontend'
+- `3a6419c` 10-25 20:09  console: 用量页新增「群文件转存」（概览/按群折叠/台账改分类/立即清理双确认）与「观察学习」只读卡；三块各自独立降级（验证：node --check 3/3；static 412 项；failpaths 131 项 ×16 面板；真实 /api/files/stats 手核字段一致）
+- `8fe7624` 10-25 20:08  docs: 补 P2 七项审计结论清单（每项带 grep 命令与代码行证据）（验证：人工核对，非测试）
+- `5779317` 10-25 20:08  model: 已知不可用的模型不再当首选，消除每轮一次 selectModel 失败（验证：L1 node --check src/bridge.js + L2 test-model-fallback 51/51、test-audit-bridge 14 PASS、test-dsh-endpoint 31/0；线上日志需重启后观察）
+- `2eb51c6` 10-25 20:08  tts: 补静态断言，钉死全部 5 处落盘点的扩展名（验证：L2 scripts/test-tts-ext 通过，输出「5 处 ttsFileName() 落盘点全部按 synth.ext 取扩展名」）
+- `006f8fe` 10-25 20:08  token: series.totals 与 summary.totals 统一口径（修 3.6 倍偏差）（验证：L2 test-token-usage 全通过（新增断言：修前 0.0028 vs 0.01005，修后 0.010050000000000002 vs 0.01005，差 1.7e-18）+ test-token-economy 35/36 与基线一致）
+- `0d85c08` 10-25 20:07  media: dhash 改异步，媒体热路径不再同步阻塞事件循环（验证：L2 scripts/test-image-hash-async 5/5 + test-audit-bridge 14 PASS、test-dsh-endpoint 31/0、test-voice-dedupe 通过）
+- `ac0adf4` 10-25 20:06  token: series 的淘汰累计改用 goneParts，不再「全有全无」（验证：L1 node --check src/token-ledger.js + L2 test-token-usage 全通过、test-token-economy 35/36 与基线一致）
+- `580ce16` 10-25 19:59  bridge: 修「事件流中断: sessionId is not defined」——降级重试路径在 turn/end 回调里引用了作用域外的裸 sessionId（应为 frame.sessionId），每轮降级都会打断事件流并重连，同时重试从未真正投递；日志补打印 stack（验证：node --check；test-audit-bridge 14 PASS；test-model-fallback 51/51；复现见 19:57:26 真实日志）
+- `6c6d21b` 10-25 19:57  Merge branch 'feat/file-archive'
+- `96fea03` 10-25 19:56  bridge: 接上 group_upload 转存、观察群只看不说、每日清理与 /api/files（验证：node --check + test-audit-bridge/test-storage-card/test-media-queue/test-archive 全过）
+- `5b0139a` 10-25 19:55  file-archive: 群文件转存台账/60-120天保留期/清理任务 + 观察学习门控（验证：node --check + test-file-archive 18 项 + test-observe-learn 10 项）
+- `2602f82` 10-25 19:51  Merge branch 'feat/backend'
+- `f0b5fc5` 10-25 19:51  vision: 视觉守卫改读「本轮真正生效的模型」，修「会话已切到 deepseek-flash 却仍把图换成文字」（验证：L1 node --check src/model-fallback.js src/bridge.js + L2 test-model-fallback 51/51（新增 4 条 resolveTurnModel）、test-audit-bridge 14 PASS、test-vision-media 2/0、test-dsh-endpoint 31/0）
+- `4cb32ee` 10-25 19:49  Merge branch 'feat/backend'
+- `be9cc33` 10-25 19:49  imagegen: tier 合法性校验挪到问档闸门之前（审阅修正：824d862 声称已挪但其 diff 里闸门仍在前面，tier 非法时会先报'还没问档位'，误导）（验证：node --check + test-imagegen-tiered / test-imagegen / test-local-fallback 54/54 / test-dsh-endpoint 31/0 / test-audit-bridge / test-model-fallback 47/47 / test-vision-media 全绿）
+- `824d862` 10-25 19:48  imagegen: 用户点名免费档也放行；tier 合法性校验挪到问档闸门之前（验证：L1 node --check src/imagegen.js src/bridge.js + L2 test-imagegen-tiered 18/18、test-imagegen 通过、test-dsh-endpoint 31/0、test-audit-bridge 14 PASS、test-local-fallback 54/54）
+- `77cc6e0` 10-25 19:47  merge feat/frontend：体检卡视觉项改读 seesImages + tier 被拒可见提示（审阅通过）
+- `a5e6729` 10-25 19:46  imagegen: 档位闸门覆盖两档 + 「随便/都行」放行；修正水印文案回归；保活只发一次（验证：L1 node --check src/imagegen.js src/bridge.js + L2 test-imagegen-tiered 17/17、test-imagegen/test-local-fallback 54/54、test-dsh-endpoint 31/0、test-audit-bridge 14 PASS）
+- `a00d1e9` 10-25 19:44  console: 视觉项改读权威字段 seesImages（三态：true/false/未知，不再推 inputModalities）；tier 被硬拒绝时给出可操作提示且不假成功（验证：node --check 3/3；health 22 条；draw 32 条；static 385 项；failpaths 115 项）
+- `f882b0c` 10-25 19:42  imagegen: /api/dsh/models 输出视觉能力；tier=high 加「先问档位」硬约束；兜底接管后本地模型保活 30 分钟（验证：L1 node --check 三文件 + L2 test-imagegen-tiered 15/15（新增 5 条档位约束断言）、test-imagegen/test-model-fallback 47/47、test-dsh-endpoint 31/0、test-audit-bridge 14 PASS、test-vision-media 2/0、test-local-fallback 54/54）
+- `4c10c74` 10-25 19:41  merge main into feat/frontend（同步视觉探针与后端提交，解决 console.html 文案冲突）
+- `c93bd84` 10-25 19:38  merge feat/backend：视觉能力（探针实测只有 deepseek-flash 能看图）+ 降级链按 provider 交替
+- `ffc13c9` 10-25 19:37  test: 补 orderFallbacksByProvider 回归；config.example 补 dsh.visionModels
+- `8b738f5` 10-25 19:37  scripts: 修视觉探针的回复采集与错误传播，实测确认只有 deepseek-flash 能看图
+- `c023145` 10-25 19:22  scripts: 新增视觉能力探针 probe-vision.mjs（验证：脚本可跑通建会话/选模型/发图，但**回复采集未成功**，两次运行都是空回复 60~90s 超时）
+- `33a7546` 10-25 19:18  model: 降级链按 provider 交替；带图回合自动切到能看图的模型（验证：L1 node --check 两文件 + L2 test-model-fallback 43/43、test-audit-bridge 14 PASS、test-dsh-endpoint 31/0；视觉切换未线上实测）
+- `cd2fdba` 10-25 19:09  config: 视觉清单按 DSH 真实声明修正为只有 deepseek-flash（验证：L1 node --check src/bridge.js + L2 test-audit-bridge 14 PASS；依据见提交信息）
+- `01397f4` 10-25 18:56  console: 体检卡新增「视觉能力」（inputModalities 含 image 为绿/否则黄/字段缺失灰未知；降级+不支持时模型项叠加「降级导致视觉不可用」）（验证：node --check 3/3；test-health-card 22 条；static 378 项；failpaths 115 项）
+- `1f9855f` 10-25 18:53  config: 补搬 imagegen/webSearch 段；带图回合加视觉能力守卫（验证：L1 node --check src/bridge.js + L2 test-audit-bridge 14 PASS、test-dsh-endpoint 31/0、test-imagegen 通过；守卫行为未在线上实测）
+- `953a385` 10-25 18:51  imagegen: 修 loadConfig 漏搬 cfg.imagegen（出图恒报 502 Failed to parse URL）；空 baseUrl 给明确诊断
+- `3044396` 10-25 17:43  console: 出图文案改为「AI生成 标注」（两档都带角标），删除全部「水印/无水印」表述；加静态防回退断言（验证：node --check 3/3；test-console-static 367 项；test-draw-panel 27 条；failpaths 107 项）
+- `e30b85a` 10-25 17:41  console: 出图面板文案改为如实说明（两档均带 AI生成 标注）
+- `064998a` 10-25 17:38  merge feat/backend: contentType 按魔数判定（P3-9）（审阅通过）
+- `c23c1e8` 10-25 17:37  imagegen: contentType 按魔数判定（修智谱返回 JPEG 被说成 png）；文案改为两档都带「AI生成」标注（验证：L1 node --check 四文件 + L2 test-imagegen-tiered 10/10（新增魔数与 JPEG 断言）、test-imagegen/test-mcp-safe 通过、test-audit-bridge 14 PASS）
+- `a3b9186` 10-25 17:34  reserved2: preset 变更后 3 秒内立即重建（不等 10 分钟 tick），实测重建 5 个会话
+- `cd5013f` 10-25 17:32  merge feat/frontend: draw 契约测试（审阅通过）
+- `6417b5e` 10-25 17:31  reserved2: preset 变更后置 pending 时补一次保存（否则重建标记不落盘）
+- `9d76b49` 10-25 17:30  reserved2: preset 变更后强制重建存量会话（P3-7）——指纹持久化+加载恢复，实测能识别变更
+- `f1e55f1` 10-25 17:26  reserved2: preset 变更后强制重建存量会话（P3-7；此前改完 preset 对已存在会话无效）
+- `377d1d3` 10-25 17:26  test: 新增 /api/socialV2/draw 契约测试（tier 必填/大小写敏感/两档分支/字段类型/429 原文逐字/前端实际传参）并同步收紧 fixture 的 tier 校验（验证：test-draw-contract 27 条全过；test-draw-panel 27 条、static 364 项、failpaths 107 项无回退）
+- `b9de828` 10-25 17:24  merge feat/backend: 降级后本轮重试一次（P3-6）（审阅通过）
+- `876f5b0` 10-25 17:24  model: 降级后本轮重试一次，不再连吃沉默（验证：L1 node --check src/bridge.js + L2 test-audit-bridge 14 PASS、test-dsh-endpoint 31/0、test-model-fallback 40/40；行为未实测）
+- `7de7925` 10-25 17:22  merge feat/backend: 双通道编排（free→CogView / high→Z-Image + 配额）（审阅通过）
+- `6d897f5` 10-25 17:22  imagegen: 接上双通道编排（free→CogView / high→Z-Image，配额先占后调、失败回滚）（验证：L1 node --check src/imagegen.js src/bridge.js + L2 test-imagegen-tiered 8/8、test-imagegen/test-imagegen-quota 无回退、test-audit-bridge 14 PASS、test-dsh-endpoint 31/0）
+- `659e4e6` 10-25 17:21  merge feat/frontend: 出图双按钮（free/high 显式传 tier）（审阅通过）
+- `6c631ff` 10-25 17:20  console: 出图改为双按钮（免费 tier=free / 高质量 tier=high），去掉下拉与自动换档；配额只控制高质量按钮；结果写档位/耗时/水印；高质量失败给「可改用免费档重试」（验证：内联 script node --check 3/3；test-draw-panel 27 条；static 364 项；failpaths 107 项）
+- `443368d` 10-25 17:20  merge feat/backend: qq_draw tier 必填 + 路由校验（审阅通过）
+- `e0408de` 10-25 17:20  imagegen: qq_draw 的 tier 改必填（free/high），路由接收并校验（验证：L1 node --check 两文件 + test-mcp-safe 通过、test-audit-bridge 14 PASS；编排未接，tier 目前只透传并记日志）
+- `3677904` 10-25 17:17  merge feat/frontend: 出图分级对齐真实契约（审阅通过）
+- `16a69e6` 10-25 17:16  console: 出图分级对齐真实契约（tier=auto|high、配额 {used,limit,remaining}）；通道只认返回体 tier/provider 否则「未提供」；水印文案照抄（验证：内联 script node --check 2/2；test-draw-panel 24 条全过；failpaths 107 项；static 360 项）
+- `37e3a18` 10-25 17:16  merge feat/frontend: 配额兼容只回 used 的形态（审阅通过）
+- `cfb278a` 10-25 17:14  console: 配额兼容「只回 used」的形态（remaining = dailyLimit - used），对齐 A 的 imagegen-quota 模块内部存 used（验证：test-draw-panel 23 条全过；fixture 新增 mode=used）
+- `bec3e03` 10-25 17:13  merge feat/frontend: 出图双档按钮 + 配额显示（审阅通过）
+- `f6a36be` 10-25 17:13  test+docs: 补分级出图的静态断言、FIXES 台账补批次十八（验证：test-console-static 355 项全过）
+- `1295aed` 10-25 17:13  console: 出图面板支持双通道（tier=auto|quality）+ 每日配额显示（接口未上线显示未知）+ 通道/服务端耗时展示 + 免费档水印提示；顺手修复 fixture 被整段重复的 bug（验证：内联 script node --check 2/2；test-draw-panel 22 条全过；failpaths 107 项全过）
+- `f0fc367` 10-25 17:11  merge feat/backend: 付费出图每日配额（审阅通过）
+- `65a3273` 10-25 17:11  merge feat/frontend: 存储卡按真实 schema 重写（审阅通过）
+- `5b5f333` 10-25 17:00  imagegen: 付费出图的每日配额（持久化 + 按自然日重置）（验证：node --check src/imagegen-quota.js；node scripts/test-imagegen-quota.mjs 7/7，含「写盘后重新读回仍是 5」这条＝重启不复活）
+- `f49a4f3` 10-25 16:54  test+docs: 存储卡断言对齐真实 schema、FIXES 契约修正（以线上实际返回为准）（验证：test-console-static 342 项全过）
+- `dce227f` 10-25 16:54  console: 存储卡按真实接口重写（top/topTotal/truncated/messages.walBytes:dbBytes/logs 数组/freelist 碎片提示），不再依赖不存在的 data.db（验证：内联 script node --check 2/2；test-storage-card 31 条全过含真实结构与「无 data.db」断言）
+- `7d7f419` 10-25 16:52  merge feat/backend: storage-stats 深度截断不再少算（truncated 标记）（审阅通过）
+- `7d31c42` 10-25 16:49  test: 修深度上限断言的 fixture（要三层目录才会触发截断；文件在任何深度都计入）（验证：node scripts/test-storage-stats 7/7）
+- `e688585` 10-25 16:49  merge feat/frontend: 存储卡片（WAL 比值提示）（审阅通过）
+- `fd1bd29` 10-25 16:49  merge feat/backend: video-frames 保留策略（7 天 + 100MB，1 天内不动）（P3-5）（审阅通过）
+- `c4f2f58` 10-25 16:49  storage: 深度超限的目录不再按 0 计，改为计入直接子文件 + 标记 depthLimited/truncated（验证：L1 node --check src/storage-stats.js + L2 scripts/test-storage-stats 7/7（新增深度上限断言））
+- `0edfbde` 10-25 16:49  media: video-frames 加保留策略（按年龄 7 天 + 总量 100MB）并接线（验证：L1 node --check src/frame-retention.js src/bridge.js + L2 scripts/test-frame-retention 5/5 + test-audit-bridge 14 PASS、test-dsh-endpoint 31/0）
+- `cf605e0` 10-25 16:48  docs: FIXES 台账补批次十七（存储卡片 + 接口契约）（验证：人工通读）
+- `115a713` 10-25 16:48  test: 补存储卡片的静态断言（验证：node scripts/test-console-static.mjs 331 项全过）
+- `a9fef74` 10-25 16:48  console: 用量页加「存储」卡（state/ 合计 / 前10项占比条 / WAL:主库 超2倍告警 / 磁盘剩余；接口未上线写「接口未提供」而不是 0）（验证：内联 script node --check 2/2；scripts/test-storage-card.mjs 25 条全过；failpaths 99 项全过）
+- `3629a2e` 10-25 16:47  merge feat/backend: 只读存储统计接口（P3-4）（审阅通过）
+- `76c1beb` 10-25 16:46  storage: 新增只读接口 GET /api/storage/stats（state/ 占用、messages.db 与 WAL、日志行数、磁盘剩余）（验证：L1 node --check src/storage-stats.js src/bridge.js + L2 scripts/test-storage-stats 6/6 + test-audit-bridge 14 PASS、test-dsh-endpoint 31/0）
+- `969108a` 10-25 16:45  merge feat/backend: 媒体闸门真正接入 enrichVideoFile（P3-1 收尾）（审阅通过）
+- `2474a74` 10-25 16:45  media: 把并发闸门真正接进 enrichVideoFile；harness 补 media-queue 注入（验证：L1 node --check 三文件 + L2 test-media-queue 6/6（含接线断言）、test-audit-bridge 14 PASS、test-dsh-endpoint 31/0）
+- `7a570b7` 10-25 16:44  merge feat/frontend: 全局错误兜底诊断条（审阅通过）
+- `bb95e93` 10-25 16:42  docs: FIXES 台账补批次十六（错误诊断条 + 待人工验证清单）（验证：人工通读）
+- `8314cf6` 10-25 16:42  test: 补全局错误兜底的静态断言（验证：node scripts/test-console-static.mjs 311 项全过）
+- `c8f2e83` 10-25 16:42  console: 全局错误兜底（window error / unhandledrejection → 底部可折叠诊断条，30 秒去重、最多 5 条、仍 console.error、自身不抛）（验证：内联 script node --check 2/2；scripts/test-error-bar.mjs 15 条全过）
+- `44d3955` 10-25 16:42  merge feat/backend: 媒体并发闸门 + modelAutoFallbackLogged FIFO 上限（P3-1/P3-3）（审阅通过）
+- `74cafa7` 10-25 16:41  model: modelAutoFallbackLogged 改成长度上限 200 的 FIFO 去重表（验证：L1 node --check src/bridge.js src/model-fallback.js + L2 test-model-fallback 43/43（新增 3 条）+ test-audit-bridge 14 PASS）
+- `3254c94` 10-25 16:41  media: 新增全局并发闸门（上限 2，FIFO，排队超时，finally 释放）（验证：L1 node --check src/media-queue.js + L2 scripts/test-media-queue 5/5）
+- `0dfaaa3` 10-25 16:39  merge feat/frontend: 黑话批量预览 + 一次撤销 + 删除输条数（审阅通过）
+- `d99d78d` 10-25 16:39  merge feat/backend: per-session 跟踪上限 500 + LRU（P2-8，P2 清空）（审阅通过）
+- `f4a683d` 10-25 16:38  token: per-session 跟踪结构加上限 500 + LRU 淘汰（验证：L1 node --check src/token-ledger.js + L2 scripts/test-token-usage 全通过（新增「600 个会话 → 夹到 500」断言）+ test-token-economy 35/36 与基线一致、test-dsh-endpoint 31/0）
+- `805042b` 10-25 16:38  docs: FIXES 台账补批次十五（黑话批量预览 + 撤销）（验证：人工通读）
+- `82404f6` 10-25 16:38  test: 补黑话批量预览/撤销的静态断言，并按新机制修正原生 confirm 计数（验证：node scripts/test-console-static.mjs 291 项全过）
+- `edb4be9` 10-25 16:38  console: 黑话批量操作加「预览 + 一次撤销 + 删除输条数」（撤销走现有 PATCH/POST，快照只在内存，失败不谎报）（验证：内联 script node --check 2/2；scripts/test-slang-undo.mjs 27 条全过含 4 种撤销失败注入）
+- `355ef2e` 10-25 16:32  merge feat/frontend: 体检卡（四项独立降级）（审阅通过）
+- `ff313d9` 10-25 16:32  merge feat/backend: 沉睡前观察夹值 + 控制台 mark_read 不计入合规（P2-3/P2-4）（审阅通过）
+- `d3200d2` 10-25 16:30  wake: 控制台点的 mark_read 不再计入「模型已调工具」合规判定（验证：L1 node --check src/bridge.js + L2 test-audit-bridge 14 PASS、test-dsh-endpoint 31/0；本项未写专门单测）
+- `940dfc4` 10-25 16:30  wait: 沉睡前观察的建议 timeoutMs 夹到 wait.maxMs，超出时告警（验证：L1 node --check src/bridge.js src/v2-wait.js + L2 scripts/test-v2-wait 全通过（新增 3 条夹值断言）+ test-audit-bridge 14 PASS）
+- `fb1754a` 10-25 16:30  docs: FIXES 台账补批次十四（体检卡）（验证：人工通读）
+- `e9ea3f6` 10-25 16:30  test: 补体检卡的静态断言（阈值常量/各自独立降级/自检记录/跳转）（验证：node scripts/test-console-static.mjs 266 项全过）
+- `cf4c387` 10-25 16:30  console: 新增「体检」卡（模型/账本/本地兜底/网关四项独立状态 + 最近一次自检 + 点击跳转对应面板）（验证：内联 script node --check 2/2；scripts/test-health-card.mjs 16 条全过；failpaths 91 项全过）
+- `8b88c2c` 10-25 16:28  merge feat/backend: /api/ops/action 异步化（P2-1）（审阅通过）
+- `274a087` 10-25 16:27  ops: /api/ops/action 的 PowerShell 调用改异步，不再冻住桥接（验证：L1 node --check src/bridge.js + L2 test-audit-bridge 14 PASS、test-dsh-endpoint 31/0；本项**仅代码审查 + 静态检查，未在控制台点按钮实测**）
+- `6e16125` 10-25 16:27  merge feat/frontend: OPERATING 对齐模型纠正行为（审阅通过，已核实 persistCorrectedModel 有备份+目录校验）
+- `5a5e84b` 10-25 16:26  docs: OPERATING 3.2 对齐 main 新行为（不可用模型 id 会被记住并跳过、同因只报一次、自动纠正会写回 config.json）（验证：knownUnavailableModels/modelAutoFallbackLogged/persistCorrectedModel 在 src/bridge.js 中 grep 命中）
+- `de6b554` 10-25 16:26  merge feat/backend: send-image 频次限制（P1-4 完成）（审阅通过）
+- `a45fe62` 10-25 16:25  send-image: 补发图频次限制（冷却 3s + 每小时 120，按会话独立计数）（验证：L1 node --check src/bridge.js src/imagegen.js + L2 test-imagegen 24/24、test-audit-bridge 14 PASS）
+- `6885aa3` 10-25 16:25  merge feat/frontend: 操作手册 OPERATING.md（审阅通过）
+- `d83e445` 10-25 16:25  merge feat/backend: TTS 扩展名按 synth.ext（4 处）+ 新会话不再试不可用模型（审阅通过）
+- `46dda1b` 10-25 16:24  docs: 新增操作手册 OPERATING.md（一分钟上手 / 状态条 / 故障速查 / 重启回滚 / 不要做的事）（验证：文档内全部路径·接口·按钮文案已对仓库逐个 grep 核对）
+- `d2bf984` 10-25 16:24  model: 新会话不再先试已知不可用的 modelForMedia；控制台推荐清单去掉 cn: 前缀（验证：L1 node --check src/bridge.js + L2 test-model-fallback 40/40、test-audit-bridge 14 PASS、test-dsh-endpoint 31/0）
+- `33059ac` 10-25 16:23  tts: 四处落盘文件名都按 synth.ext 取扩展名，并修正一处未转义的正则（验证：L1 node --check src/bridge.js + L2 test-tts 59/0、test-voice 83/0、test-audit-bridge 14 PASS）
+- `5603dcc` 10-25 16:23  merge feat/backend: 模型自动纠正后写回会话缓存 + 同因只报一次（审阅通过）
+- `883de8d` 10-25 16:22  model: 自动纠正后把正确模型写回会话缓存 + 同一会话同一原因只报一次（验证：L1 node --check src/bridge.js + L2 test-model-fallback 40/40、test-audit-bridge 14 PASS、test-dsh-endpoint 31/0）
+- `7f2564c` 10-25 16:22  merge feat/backend: URL 型 provider 立即下载 + 单次重试 + 日志脱敏（审阅通过）
+- `b623240` 10-25 16:22  imagegen: URL 型 provider 立刻下载 + 失败重试一次 + 日志不打完整 URL（验证：L1 node --check src/imagegen.js + L2 scripts/test-imagegen 24/24（新增 3 条：重试次数、二次成功、URL 打码）+ test-audit-bridge 14 PASS）
+- `e0e97b3` 10-25 16:21  merge feat/backend: 视频分析异步化 + 唤醒零动作兜底（注释已更正）（审阅通过）
+- `1bee798` 10-25 16:21  Revert "Reapply "reserved2: 唤醒后「只思考不调工具」可观测 + 一次性补救（验证：L1 node --check src/v2-wait.js src/bridge.js + L2 scripts/test-v2-wait 全通过（含 8 条新断言）+ 既有套件无回退）""
+- `44cc19f` 10-25 16:21  Revert "reserved2: 恢复「唤醒后无动作」兜底，并把注释里被证伪的「11 次」改成准确表述（验证：L1 node --check src/v2-wait.js src/bridge.js + L2 scripts/test-v2-wait 全通过 + test-audit-bridge 14 PASS）"
+- `56b4cd0` 10-25 16:20  reserved2: 恢复「唤醒后无动作」兜底，并把注释里被证伪的「11 次」改成准确表述（验证：L1 node --check src/v2-wait.js src/bridge.js + L2 scripts/test-v2-wait 全通过 + test-audit-bridge 14 PASS）
+- `e5ef224` 10-25 16:20  merge feat/frontend: 出图测试面板（出图/冷却倒计时/失败原文）（审阅通过）
+- `aa4cb5b` 10-25 16:20  Reapply "reserved2: 唤醒后「只思考不调工具」可观测 + 一次性补救（验证：L1 node --check src/v2-wait.js src/bridge.js + L2 scripts/test-v2-wait 全通过（含 8 条新断言）+ 既有套件无回退）"
+- `f76ea47` 10-25 16:20  video: 视频分析改异步 spawn，不再阻塞事件循环；音轨补 -t 时长上限（验证：L1 node --check src/video-analyze.js src/bridge.js + L2 scripts/test-video-ffprobe 12/12（含「慢命令期间定时器仍按时触发」的不阻塞断言）+ test-media-normalize/test-audit-bridge/test-dsh-endpoint 无回退）
+- `90901d9` 10-25 16:19  merge feat/backend: 生图前中文提示词转英文（失败回退原文）（审阅通过）
+- `d33d971` 10-25 16:18  docs: FIXES 台账补批次十二（出图测试面板）（验证：人工通读）
+- `2d3e854` 10-25 16:18  test: 补出图测试面板的静态断言（验证：node scripts/test-console-static.mjs 243 项全过）
+- `56c9de0` 10-25 16:18  console: 新增「出图测试」面板（POST /api/socialV2/draw，429 原文+倒计时禁用，耗时/响应字节数/messageId，provider 未知如实标注）（验证：内联 script node --check 2/2；scripts/test-draw-panel.mjs 12 条全过；failpaths 67 项全过）
+- `c985c14` 10-25 16:18  imagegen: 生图前把中文提示词翻成英文（失败一律回退原文）（验证：L1 node --check src/imagegen.js src/bridge.js + L2 scripts/test-imagegen 21/21（含超时/抛错/译文不合法三条回退）+ test-audit-bridge 14 PASS）
+- `585b819` 10-25 16:17  merge feat/backend: 生图链路抽成可插拔 provider（url-template / openai-image）（审阅通过）
+- `08fc3d0` 10-25 16:17  imagegen: 生图链路抽成可插拔 provider（url-template / openai-image）（验证：L1 node --check src/imagegen.js src/bridge.js + L2 scripts/test-imagegen 15/15 + test-audit-bridge 14 PASS、test-dsh-endpoint 31/0 无回退）
+- `80ef940` 10-25 16:16  merge feat/backend: POST /api/dsh/model 别名复用校验（审阅通过）
+- `b491090` 10-25 16:15  model: POST /api/dsh/model 作为别名复用 /api/model 的校验逻辑（验证：L1 node --check src/bridge.js + 用 audit-bridge-harness 实测两个端点返回码与响应体一致（均 200，因 harness 无 DSH、清单为空走「放行+告警」分支））
+- `2c402a6` 10-25 16:14  merge feat/backend: 撤销唤醒零动作补救（前提已证伪，保持代码简洁）
+- `226505c` 10-25 16:14  Revert "reserved2: 唤醒后「只思考不调工具」可观测 + 一次性补救（验证：L1 node --check src/v2-wait.js src/bridge.js + L2 scripts/test-v2-wait 全通过（含 8 条新断言）+ 既有套件无回退）"
+- `a349e6c` 10-25 16:14  merge feat/backend: 唤醒后零动作的可观测与一次性补救（审阅通过，附注释纠正要求）
+- `5ef6b0d` 10-25 16:13  reserved2: 唤醒后「只思考不调工具」可观测 + 一次性补救（验证：L1 node --check src/v2-wait.js src/bridge.js + L2 scripts/test-v2-wait 全通过（含 8 条新断言）+ 既有套件无回退）
+- `357d172` 10-25 16:11  merge feat/frontend: 上下文效率卡片 + failpaths 59 项（审阅通过）
+- `9b4a68c` 10-25 16:11  merge feat/backend: 账本 liveCost 归属 + 兜底优先级与昵称（审阅通过）
+- `3e57186` 10-25 16:10  local: 降级顺序改为 主模型 → 备用模型 → 本地 8B（验证：L1 node --check src/local-fallback.js src/bridge.js + L2 scripts/test-local-fallback 54/54 + 既有套件无回退）
+- `f270926` 10-25 16:09  local: 兜底人格改用线上真实昵称，不再自称「小鲸鱼」（验证：L1 node --check src/local-fallback.js src/local-fallback-persona.js src/bridge.js + L2 scripts/test-local-fallback 50/50）
+- `894aa2c` 10-25 16:09  test: failpaths 汇总行按实际面板数打印（验证：node scripts/test-console-failpaths.mjs 59 项全过）
+- `2a406f0` 10-25 16:09  docs: FIXES 台账补批次十一（上下文效率卡片 + summary 缺字段说明）（验证：人工通读）
+- `63a54c1` 10-25 16:09  test: 补上下文效率卡片的静态断言（验证：node scripts/test-console-static.mjs 222 项全过）
+- `38bcb84` 10-25 16:08  console: 用量页加「上下文效率」卡片（平均 prompt/输出、比值、>500 告警解读、最近 20 轮中位数、7 天字符方块趋势；缺字段写无法计算）（验证：内联 script node --check 2/2；scripts/test-context-efficiency.mjs 19 条全过）
+- `4696bb0` 10-25 16:08  local: 把兜底通道的实测质量/延迟/能力边界写进代码注释（验证：L1 node --check src/local-fallback.js + L2 scripts/test-local-fallback 45/45）
+- `949c593` 10-25 16:07  token: 逐轮归属改用 liveCost，淘汰累计按原子记录精确剔除（验证：L1 node --check src/token-ledger.js + L2 scripts/test-token-usage 全通过（含两条新不变量）+ 用线上账本副本离线复算 diff=0.000000）
+- `be1fd2e` 10-25 16:06  merge feat/frontend: 故障注入回归网 + 可访问性（审阅通过）
+- `324574b` 10-25 16:06  docs: FIXES 台账补批次十（失败分支回归网 + 可访问性）（验证：人工通读）
+- `7430a67` 10-25 16:06  a11y: ops 加 :focus-visible；静态断言补裸按钮扫描/焦点环/故障注入（验证：node scripts/test-console-static.mjs 205 项全过）
+- `83bc736` 10-25 16:06  test: fixture 加故障注入（500/坏JSON/空body/超时）+ 新增 test-console-failpaths 回归（六个面板 × 四种故障，假 DOM 跑真内联脚本）（验证：node scripts/test-console-failpaths.mjs 51 项全过）
+- `2ebbf8c` 10-25 16:05  console: 状态条六格补 aria-label/title + Esc 关弹窗（验证：内联 script node --check 2/2；scripts/test-statusbar-branches.mjs 8 条全过含 aria-label 断言）
+- `c1fc465` 10-25 16:05  merge feat/backend: 钉死本地兜底端点与 think:false 的回归测试（审阅通过）
+- `ba26ac2` 10-25 16:04  test: 钉死本地兜底的端点与 think:false（审阅窗口线上实测 qwen3 走 /v1 会只思考不出话）（验证：L2 scripts/test-local-fallback 45/45）
+- `415d7e6` 10-25 16:03  merge feat/backend: 模型 id 落盘校验 + /api/dsh/models + 启动纠正（审阅通过）
+- `613820a` 10-25 16:03  model: 模型 id 落盘前校验 + /api/dsh/models 下拉接口 + 启动时纠正写回配置（验证：L1 node --check src/model-fallback.js src/bridge.js + L2 scripts/test-model-fallback 40/40 + 既有套件无回退）
+- `b07d597` 10-25 16:00  merge feat/backend: 快照回填带 model + ffprobe 独立解析 + 120s 夹逼 + holidays 复用（审阅通过）
+- `87767ed` 10-25 16:00  low: 快照回填带 model、ffprobe 独立解析、120s 硬顶先夹逼、holidays 只构造一次（验证：L1 node --check 四个文件 + L2 test-token-usage 全通过 / test-video-ffprobe 7/7 / test-token-economy 35/36 与基线一致）
+- `6647dbc` 10-25 15:59  merge feat/frontend: 配置保存前 diff 预览 + 降级运维手册（审阅通过）
+- `2ebb263` 10-25 15:58  docs: FIXES 台账补批次九（保存前 diff + 降级手册）（验证：人工通读）
+- `737d4bc` 10-25 15:58  test: 补保存前 diff 预览的静态断言（含基线来源与无改动跳过提交）（验证：node scripts/test-console-static.mjs 188 项全过）
+- `00f9098` 10-25 15:58  docs: 新增降级与兜底运维手册（模型降级 / 本地兜底接管 / 账本不一致：怎么发现、代表什么、该做什么、何时叫醒 owner）（验证：人工通读）
+- `f225b63` 10-25 15:58  console: 二代仿真配置保存前弹 diff 预览（只列真正变化的字段、超 20 项折叠、无改动跳过提交、基线取服务端读回的对象）（验证：内联 script node --check 2/2；scripts/test-config-diff.mjs 10 条全过）
+- `d662f19` 10-25 15:55  merge feat/frontend: 账本一致性指示灯 + 用量 CSV 导出（审阅通过）
+- `f61b635` 10-25 15:55  merge feat/backend: send-burst 不再无条件加载 tts + 测试套件治理（审阅通过）
+- `3c62f3e` 10-25 15:55  docs: FIXES 台账补批次八（一致性指示灯 + CSV 导出 + 浮点边界坑）（验证：人工通读）
+- `8ca7069` 10-25 15:55  test: 补账本一致性与 CSV 导出的静态断言（验证：node scripts/test-console-static.mjs 178 项全过）
+- `97a0206` 10-25 15:55  console: 用量页加账本一致性指示灯（attributed+unattributed vs cost，0.01 容差、差值量化到分）+ 按会话/按模型导出 CSV（转义逗号引号换行、纯前端 Blob）（验证：内联 script node --check 2/2；scripts/test-usage-ledger.mjs 17 条全过）
+- `a5970eb` 10-25 15:55  bridge: send-burst 不再无条件加载 tts 模块；harness 补 memory-layers（验证：L1 node --check + L2 test-audit-regressions 全部通过）
+- `855155e` 10-25 15:52  merge feat/frontend: 状态条接模型与本地兜底三分支 + 保存后回读（审阅通过）
+- `515cea4` 10-25 15:51  docs: FIXES 台账补批次七（状态条接模型 + 本地兜底三分支 + 保存后回读）（验证：人工通读）
+- `776416a` 10-25 15:51  test: 补状态条模型/本地兜底与保存后回读的静态断言（验证：node scripts/test-console-static.mjs 161 项全过）
+- `1e78016` 10-25 15:51  console: 状态条接 GET /api/model（模型/降级 + 本地兜底三分支 + ok/fail 计数）+ 保存后回读 /api/model 显示实际生效模型（验证：内联 script node --check 2/2；fixture 造三分支跑 scripts/test-statusbar-branches.mjs 7 条全过）
+- `9f72b1e` 10-25 15:47  merge feat/frontend: 模型下拉 + 保存前校验 + 400 清单展示 + degraded 提示（审阅通过；后端 /api/dsh/models 尚未交付，走手输降级路径）
+- `4169f5b` 10-25 15:46  docs: FIXES 台账补插队任务（模型下拉 + 保存前校验 + 降级提示）（验证：人工通读）
+- `1d08230` 10-25 15:46  test: 补模型下拉/保存前校验/400 清单/degraded/降级手输的静态断言（验证：node scripts/test-console-static.mjs 146 项全过）
+- `62b8044` 10-25 15:46  console: 模型改成下拉（清单来自 GET /api/dsh/models）+ 保存前校验 + 400 展示服务端清单 + degraded 提示 + 旧版桥接退回手输（验证：抽取内联 script node --check 2/2 OK；起 fixture 实测 GET 清单 / POST 已知 200 / POST cn:deepseek-v4-pro 400+清单）
+- `b0c4469` 10-25 15:46  merge feat/backend: 本地小模型兜底通道（纯文本直发，走 ollama /api/chat + think:false）（审阅通过）
+- `9965f3e` 10-25 15:45  local: 外部全断时本地小模型接管回话（纯文本直发，不调工具）（验证：L1 node --check src/local-fallback.js src/local-fallback-persona.js src/bridge.js + L2 scripts/test-local-fallback 43/43 + 既有套件无回退）
+- `07095ae` 10-25 15:43  merge feat/frontend: 重启后自动自检 + 顶部状态条 + 用量按模型（审阅通过；已核对 /api/tokens/recent 真实返回 500 条、485 条带 model）
+- `a827a93` 10-25 15:43  docs: FIXES 台账补批次六（重启联动/状态条/按模型 + summary 无 per-model 数据的说明）（验证：人工通读）
+- `3859035` 10-25 15:43  test: 补重启自检联动/状态条/按模型的静态断言（含超时上限与失败高亮分支）（验证：node scripts/test-console-static.mjs 135 项全过）
+- `94f049a` 10-25 15:43  console: 重启后自动等桥接（2s×60s 上限）并跑自检 + 顶部状态条（10s 独立刷新）+ 用量按模型聚合（验证：抽取内联 script node --check 2/2 OK；test-console-static 135 项全过）
+- `f8e2418` 10-25 15:38  merge feat/frontend: 一键自检 + toast + 窄屏适配（审阅通过；自检 6 条期望已逐条对真实接口验证）
+- `ebaad95` 10-25 15:36  docs: FIXES 台账补批次五（自检/窄屏/toast + 保留 alert 清单与理由）（验证：人工通读；台账标识均被 test-console-static 覆盖）
+- `e957744` 10-25 15:36  test: 补一键自检/toast/窄屏断点的静态断言（验证：node scripts/test-console-static.mjs 114 项全过）
+- `1525d15` 10-25 15:36  ops: 加 toast（失败手动关）+ 768px 窄屏表格横向滚动（验证：抽取内联 script node --check OK；test-console-static 全过）
+- `c74621e` 10-25 15:36  console: 运行总览加「一键自检」+ 新增 toast 统一提示 + 1280/1024/768/420 窄屏适配（验证：抽取内联 script node --check 2/2 OK；test-console-static 114 项全过）
+- `0f97257` 10-25 15:32  merge feat/frontend: 轮询治理 + 防重复提交 + 二次确认 + FIXES 台账（审阅通过）
+- `bad2860` 10-25 15:31  docs: 新增 docs/FIXES.md 修复台账（现象/位置/修法/验证）+ COLLAB 已知坑补「换模型池要同步三处」与 cn: 前缀事故（验证：人工通读；台账里的标识均可被 test-console-static 断言覆盖）
+- `974483a` 10-25 15:31  test: 补轮询治理/防重复提交/二次确认的静态断言（验证：node scripts/test-console-static.mjs 85 项全过）
+- `0fccd70` 10-25 15:31  ops: 同上（opsBusy + 暂停群聊二次确认 + visibilitychange 暂停 2s/5s/30s 三个定时器）（验证：抽取内联 script node --check OK；test-console-static 全过）
+- `257bd90` 10-25 15:31  console: 页面不可见时暂停轮询 + 全部 POST 按钮防重复提交 + 静默/暂停二代补二次确认（验证：抽取内联 script node --check 2/2 OK；test-console-static 85 项全过）
+- `b5bd3cd` 10-25 15:27  merge feat/frontend: 用量面板滚动保持 + 剩余静默失败清理 + innerHTML 未转义护栏（审阅通过）
+- `ffdf602` 10-25 15:24  test: 加 innerHTML 未转义护栏（规则化扫描 + 行号）+ api !res.ok 防回退 + 用量面板滚动断言（验证：test-console-static 58 项全过；护栏对修复前 384a836 的 ops.html 能报出 2 处历史缺陷，对当前代码 0 误报）
+- `c000c9a` 10-25 15:24  ops: 暂停状态与模型列表读取失败带上原因（不再只写「读取失败」）（验证：抽取内联 script node --check OK；test-console-static 全过）
+- `61cce81` 10-25 15:24  console: 用量面板渲染保持滚动位置 + 清掉剩余静默失败（v2 工具日志/记忆/会话下拉/最近调用）（验证：抽取内联 script node --check 2/2 OK；test-console-static 全过）
+- `6c944e4` 10-25 15:21  merge feat/backend: P0 四条修复（extra 未定义 / 动图 seconds / 语音去重 / 视频流式截断）+ 测试（审阅通过）
+- `1810010` 10-25 15:21  merge feat/frontend: 接口失败可见化（api 抛错 + 三个 loader + 下拉重建）+ 回归断言（审阅通过）
+- `2c6bb21` 10-25 15:17  memory: memory-update 的印象条目上限保持 50（验证：L1 node --check src/bridge.js + L2 scripts/test-memory-layers 25/25 + scripts/test-audit-bridge 14/14）
+- `eed244d` 10-25 15:17  video: 视频下载改成流式截断，media.size=0 不再全量读入（验证：L1 node --check src/safe-fetch.js src/bridge.js + L2 scripts/test-safe-fetch-bounded 8/8）
+- `716f7ad` 10-25 15:16  voice: 合成去重标记带序号，不再吞掉同会话后续语音（验证：L1 node --check src/voice-dedupe.js src/bridge.js + L2 scripts/test-voice-dedupe 12/12 + scripts/test-audit-bridge 14/14）
+- `d9d57c5` 10-25 15:16  media: 动图降级分支修 seconds 块级作用域 ReferenceError（验证：L1 node --check src/media-normalize.js + L2 scripts/test-media-normalize 全部通过，含此前一直红的「抽帧失败退回首帧」用例）
+- `bcca243` 10-25 15:16  memory: memory-update 编辑印象改用纯函数，修 extra 未定义的 ReferenceError（验证：L1 node --check src/memory-layers.js src/bridge.js + L2 scripts/test-memory-layers 25/25 + scripts/test-audit-bridge 14/14）
+- `3142e20` 10-25 15:15  test: 静态测试补接口失败可见性回归断言（验证：node scripts/test-console-static.mjs 全部通过，新增 18 条断言全绿）
+- `8764c76` 10-25 15:15  ops: 三个 loader 判 res.ok/data.ok 并显示失败（黑话/表情不再伪装成「空」）+ 表情注释去掉 change/blur 双写（验证：抽取内联 script node --check OK；test-console-static 全过；核对 src/bridge.js 三个接口响应结构，GET /api/slang 无 ok 字段故改判 entries 数组）
+- `721275e` 10-25 15:15  console: 接口失败必须可见（api 非 2xx/空 body/非 JSON 抛错 + 关键面板显示错误 + 会话下拉不再每 3 秒重建）（验证：抽取内联 script node --check 2/2 OK；node scripts/test-console-static.mjs 全部通过；api() 隔离实测 6 种响应均给出明确错误文案）
+- `6910406` 10-25 15:06  merge feat/frontend: 配置读取防护 + ops XSS + 滚动保持 + 白名单校验（审阅通过）
+- `142bac9` 10-25 15:06  merge feat/backend: 模型池自动回退 + 503 判定 + 错误不外泄 + 价格表归一化（审阅通过）
+- `e2e867e` 10-25 14:58  model: 模型池切换自动回退 + 503 容量错误识别 + 内部错误不外泄（验证：node --check src/bridge.js/model-fallback.js/model-prices.js/token-ledger.js + L2 scripts/test-model-fallback 33/33 + 既有 L2 套件无回归）
+- `ba21ef3` 10-25 14:57  test: 静态测试补配置读取防护/滚动保持/白名单解析/ops 转义与轮询的回归断言（验证：node scripts/test-console-static.mjs 全部通过）
+- `5e47fa3` 10-25 14:57  ops: 黑话词条与服务信息改 textContent 防存储型 XSS + 暂停开关轮询只建一次（验证：抽取内联 script node --check 通过 + test-console-static 新增 ops.html 断言全过）
+- `384a836` 10-25 14:57  console: 配置读取失败禁止保存 + 轮询保持滚动位置 + 白名单解析失败显式提示（验证：抽取内联 script node --check 通过 + test-console-static 全过 + 白名单解析片段实测 10 组输入）
+- `c9e56d8` 10-25 14:27  merge feat/frontend: fixture 阈值对齐 + 勾选清理提示（审阅通过）
+- `e8d5f7d` 10-25 14:27  merge feat/backend: self-test 端点解析与失败诊断（审阅通过）
+- `0d2a4b1` 10-25 14:11  console: 切换释义来源筛选清理勾选时在 slangMsg 提示已取消条数（验证：抽取内联 script 逐个 node --check 通过 + test-console-static 全部通过）
+- `8b39fc5` 10-25 14:11  fixture: 对齐 slangConfig 阈值为 [1,3,6] 并补 researchChunkSize/researchTimeoutMs/autoConfirmWeb（验证：node --check + makeFixtureState 冒烟 + test-console-static 全部通过）
+- `93453f7` 10-25 13:48  self-test: 端点默认读 config.dsh.baseUrl、失败分类到地址与原因（验证：node --check + 28 项脱网单测 + L2 scripts/test-dsh-endpoint 31/31 + L3 带参/不带参各跑通）
+- `3e51c39` 10-25 13:47  merge feat/frontend: 黑话释义来源筛选（审阅通过）
+- `f638b8b` 10-25 13:46  slang面板: 增加释义来源筛选下拉框与来源计数（验证：node --check 抽取的内联脚本 + test-console-static 全部通过 + 假 DOM 逻辑断言 8/8 + fixture 冒烟）
+- `6e3483c` 10-25 13:44  docs: 登记三个窗口的角色与施工A的 self-test 验证例外
+- `4866da2` 10-25 13:41  docs: 多窗口协作约定（工作树并行 + 主从发布）
+- `2f73264` 10-25 13:40  chore: 关掉 CRLF 转换，保证 start.bat/源码 按 LF 原样进出（本项目 bat 是 LF）
+- `d64f33b` 10-25 13:39  baseline: 接手时的现状（黑话自动标注修复 + 控制台 basis 标签 + autoConfirmWeb 之后）

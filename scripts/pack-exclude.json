@@ -1,0 +1,99 @@
+{
+  "doc": "打包排除清单（唯一真源）。两个 pack-project*.ps1 都读它；改这里，别改脚本里的硬编码。说明见 docs/state-egress-boundary.md。规则按 stage 根目录的相对路径匹配。",
+  "version": 2,
+  "removeAtRoot": [
+    "state",
+    "logs",
+    "audio",
+    "dist",
+    ".git"
+  ],
+  "removeDirsAnywhere": [
+    "state",
+    "logs",
+    "__pycache__",
+    ".npm-cache",
+    ".git"
+  ],
+  "removePaths": [
+    "docs/audits",
+    "docs/design",
+    "docs/legacy",
+    "docs/research",
+    "docs/qq-bridge-PUBLISH_PLAN.md",
+    "docs/qq-bridge-SECURITY_AUDIT.md",
+    "docs/guides/PROJECT_GUIDE.md",
+    "docs/guides/VOICE.md",
+    "state/affinity.json",
+    "desktop/vendor"
+  ],
+  "removeNameGlobs": [
+    "*.log",
+    "*.bak*",
+    ".env",
+    ".env.*",
+    "*.pyc",
+    "*.exe",
+    "privacy-rules.json",
+    "config.json"
+  ],
+  "removeRootNameGlobs": [
+    "PROJECT_GUIDE.md",
+    "ARCH_REVIEW.md",
+    "DSH_QQ_TOOLS_PLAN.md",
+    "GEN2_SIMULATION_PLAN.md",
+    "SOCIAL_MODE_PLAN.md",
+    "RESEARCH_QQ_MESSAGE_DND.md",
+    "RESEARCH_SNOWLUMA_EMOJI_STICKER.md",
+    "SnowLuma功能调研.md",
+    "真人语感策略.md",
+    "TOKEN_COST.md",
+    "LOCAL_MODEL_SIZING.md",
+    "*.py"
+  ],
+  "modeExtra": {
+    "normal": {
+      "removeAtRoot": [
+        "node_modules"
+      ]
+    },
+    "full": {}
+  },
+  "sanitize": {
+    "comment": "stage 副本里把本机绝对路径换成占位符；仓库文件不动。",
+    "binaryExtensions": [
+      ".png",
+      ".jpg",
+      ".jpeg",
+      ".gif",
+      ".webp",
+      ".ico",
+      ".mp4",
+      ".webm",
+      ".wav",
+      ".mp3",
+      ".zip",
+      ".exe",
+      ".dll",
+      ".node",
+      ".woff",
+      ".woff2",
+      ".ttf",
+      ".zstd",
+      ".db",
+      ".sqlite",
+      ".pyc",
+      ".wasm"
+    ],
+    "patterns": [
+      {
+        "regex": "[A-Za-z]:\\\\Users\\\\[^\\\\\\s\"'`]{2,}",
+        "replace": "<本机路径>"
+      },
+      {
+        "regex": "(?<![A-Za-z0-9])(?!C:)[A-Za-z]:\\\\[^\\\\\\s\"'`|<>]{2,}\\\\",
+        "replace": "<本机路径>\\"
+      }
+    ]
+  }
+}

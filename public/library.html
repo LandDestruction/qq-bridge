@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>文件库 · BOOTH 商品卡片</title>
+<style>
+  :root{--bg:#0d1016;--panel:#141922;--panel-2:#171d27;--line:#252d3c;--text:#e7ebf3;--muted:#8d98ac;--accent:#4d6bfe;--ok:#48d17a;--warn:#ffb020;--err:#ff6b6b}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 "Segoe UI","Microsoft YaHei",system-ui,sans-serif}
+  a{color:var(--accent);text-decoration:none}
+  button,input,select{font:inherit;color:inherit}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .app{display:grid;grid-template-columns:220px 1fr;min-height:100vh}
+  .sidebar{background:var(--panel);border-right:1px solid var(--line);padding:16px 10px;display:flex;flex-direction:column;gap:4px;position:sticky;top:0;height:100vh}
+  .brand{font-weight:700;letter-spacing:.5px;padding:6px 10px 14px;font-size:16px}
+  .brand small{display:block;color:var(--muted);font-weight:400;font-size:11px;letter-spacing:0}
+  .nav-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:none;border:0;cursor:pointer;text-align:left;color:var(--text)}
+  .nav-item:hover{background:var(--panel-2)}
+  .nav-item.active{background:#1e2532;box-shadow:inset 2px 0 0 var(--accent)}
+  .nav-item .count{margin-left:auto;color:var(--muted);font-size:12px}
+  .nav-item .badge{margin-left:auto;background:#c8323b;color:#fff;border-radius:10px;padding:0 7px;font-size:11px;line-height:18px}
+  .sidebar-foot{margin-top:auto;color:var(--muted);font-size:11px;padding:10px}
+  .topbar{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#151b26,#0f141c);flex-wrap:wrap}
+  .topbar h1{font-size:18px;margin:0 12px 0 0}
+  .search{flex:1 1 240px;min-width:180px;display:flex;align-items:center;gap:8px;background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:6px 10px}
+  .search input{flex:1;background:none;border:0;outline:none}
+  .btn{background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer;white-space:nowrap}
+  .btn:hover{border-color:#3b465c}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .filters{display:none;gap:16px;padding:12px 18px;border-bottom:1px solid var(--line);background:var(--panel);flex-wrap:wrap}
+  .filters.open{display:flex}
+  .filters fieldset{border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin:0}
+  .filters legend{padding:0 6px;color:var(--muted);font-size:12px}
+  .filters label{display:inline-flex;align-items:center;gap:5px;margin-right:10px;font-size:12px}
+  .filters input[type=text]{background:var(--panel-2);border:1px solid var(--line);border-radius:6px;padding:5px 8px}
+  .main{padding:16px 18px 40px;min-height:60vh}
+  .metrics{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:14px}
+  .metric{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 14px;min-width:140px}
+  .metric b{display:block;font-size:20px;margin-top:4px}
+  .metric span{color:var(--muted);font-size:12px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;position:relative;text-align:left;padding:0;color:inherit}
+  .card:hover{border-color:#3b4a68;transform:translateY(-1px);box-shadow:0 6px 18px rgba(0,0,0,.35)}
+  .thumb{aspect-ratio:1/1;background:#0a0d12;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;overflow:hidden}
+  .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+  .card-body{padding:9px 11px 11px;display:flex;flex-direction:column;gap:4px}
+  .card-title{font-weight:600;font-size:13px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.35;min-height:2.7em}
+  .card-shop{color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .card-foot{display:flex;justify-content:space-between;color:var(--muted);font-size:11px;margin-top:2px}
+  .cat-badge{position:absolute;left:8px;bottom:8px;background:#0b0f16cc;border:1px solid var(--line);border-radius:999px;padding:1px 8px;font-size:11px;color:#c9d3e3}
+  .status-dot{position:absolute;right:9px;top:9px;width:9px;height:9px;border-radius:50%;box-shadow:0 0 0 2px #0b0f16}
+  .status-dot.ok{background:var(--ok)} .status-dot.pending{background:var(--warn)} .status-dot.nocover{background:#5d6878}
+  .empty{border:1px dashed var(--line);border-radius:12px;padding:28px;text-align:center;color:var(--muted)}
+  .err{border:1px solid #a33;background:#1a1013;color:#ffb3b3;border-radius:10px;padding:12px;margin:10px 0;white-space:pre-wrap}
+  .pager{display:flex;align-items:center;gap:10px;margin-top:16px;flex-wrap:wrap;color:var(--muted)}
+  .drawer-mask{position:fixed;inset:0;background:#04070c99;display:none;z-index:40}
+  .drawer-mask.open{display:block}
+  .drawer{position:fixed;top:0;right:0;bottom:0;width:min(560px,94vw);background:var(--panel);border-left:1px solid var(--line);z-index:50;padding:18px;overflow:auto;transform:translateX(100%);transition:transform .18s ease}
+  .drawer.open{transform:none}
+  .drawer h2{font-size:16px;margin:0 0 10px;padding-right:60px}
+  .kv{display:grid;grid-template-columns:96px 1fr;gap:6px 10px;font-size:13px;margin:10px 0}
+  .kv span{color:var(--muted)}
+  .kv code{word-break:break-all;color:#c9d3e3}
+  .drawer .close{position:absolute;top:14px;right:14px}
+  .drawer-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+  .file-row{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;border-bottom:1px dashed var(--line);padding:7px 0;font-size:12px}
+  .file-row .fn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .img-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin:8px 0}
+  .img-grid figure{margin:0;background:#0a0d12;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .img-grid img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block}
+  .img-grid figcaption{font-size:10px;color:var(--muted);padding:3px 5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  pre.meta{background:#0a0d12;border:1px solid var(--line);border-radius:8px;padding:10px;font-size:12px;max-height:220px;overflow:auto;white-space:pre-wrap}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media (max-width:900px){.two-col{grid-template-columns:1fr}}
+  .un-row{display:grid;grid-template-columns:1fr auto auto auto;gap:8px;align-items:center;border-bottom:1px dashed var(--line);padding:7px 0;font-size:12px}
+  .un-row .fn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .un-row input{width:120px;background:#0f141c;border:1px solid var(--line);border-radius:6px;padding:4px 6px}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#1c2430;border:1px solid var(--line);border-radius:8px;padding:8px 14px;opacity:0;pointer-events:none;transition:opacity .15s;z-index:60}
+  .toast.show{opacity:1}
+  @media (max-width:820px){.app{grid-template-columns:1fr}.sidebar{position:static;height:auto;flex-direction:row;flex-wrap:wrap}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">BOOTH Library<small>按商品聚合 · 只收压缩包</small></div>
+    <button class="nav-item" data-view="home" type="button">Home<span class="count" id="navHomeCount">—</span></button>
+    <button class="nav-item" data-view="lists" type="button">Lists<span class="count" id="navListsCount">—</span></button>
+    <button class="nav-item" data-view="notify" type="button">Notify<span class="badge" id="navNotifyBadge" hidden>0</span></button>
+    <button class="nav-item active" data-view="library" type="button">Library<span class="count" id="navLibraryCount">—</span></button>
+    <button class="nav-item" data-view="unclassified" type="button">未分类<span class="count" id="navUncCount">—</span></button>
+    <button class="nav-item" data-view="settings" type="button">Settings</button>
+    <div class="sidebar-foot">卡片缩略图 = BOOTH 商品图（走桥接 /api/library/item-thumb）</div>
+  </aside>
+
+  <div>
+    <header class="topbar">
+      <h1 id="pageTitle">Library</h1>
+      <div class="search">
+        <span aria-hidden="true">🔍</span>
+        <input id="q" type="search" placeholder="搜索标题 / 店铺 / BOOTH 号 / 文件名" autocomplete="off" aria-label="搜索">
+      </div>
+      <button class="btn" id="filterToggle" type="button" aria-expanded="false">Filter</button>
+      <select class="btn" id="sort" aria-label="排序">
+        <option value="newest">最新入库</option>
+        <option value="title">标题</option>
+        <option value="booth">BOOTH 号</option>
+        <option value="size">大小</option>
+      </select>
+      <button class="btn" id="refresh" type="button" title="刷新">↻</button>
+    </header>
+
+    <section class="filters" id="filters" aria-label="筛选">
+      <fieldset><legend>分类</legend><div id="filterCategories"></div></fieldset>
+      <fieldset><legend>店铺</legend><input id="filterShop" type="text" placeholder="店铺名包含…"></fieldset>
+      <fieldset><legend>状态</legend>
+        <label><input type="checkbox" class="st" value="ok">已归类</label>
+        <label><input type="checkbox" class="st" value="pending">待补抓</label>
+        <label><input type="checkbox" class="st" value="nocover">封面缺失</label>
+      </fieldset>
+    </section>
+
+    <main class="main" id="main">
+      <div class="metrics" id="metrics" hidden></div>
+      <div id="viewBody"></div>
+      <div class="pager" id="pager" aria-live="polite"></div>
+    </main>
+  </div>
+</div>
+
+<div class="drawer-mask" id="drawerMask"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle" tabindex="-1">
+  <button class="btn close" id="drawerClose" type="button">关闭</button>
+  <h2 id="drawerTitle">商品详情</h2>
+  <div id="drawerBody"></div>
+</aside>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+// ── 基础 ────────────────────────────────────────────────────────────────────
+const token = new URLSearchParams(location.search).get('token') || localStorage.getItem('consoleToken') || '';
+function api(path, method, body) {
+  const headers = body ? { 'content-type': 'application/json' } : {};
+  if (token) headers['x-console-token'] = token;
+  return fetch(path, { method: method || 'GET', headers, body: body ? JSON.stringify(body) : undefined }).then(async (res) => {
+    const text = await res.text();
+    if (!res.ok) throw new Error('HTTP ' + res.status + (text ? '：' + text.slice(0, 120) : ''));
+    if (!text.trim()) throw new Error('HTTP ' + res.status + '，响应为空');
+    try { return JSON.parse(text); } catch { throw new Error('HTTP ' + res.status + '，返回的不是 JSON：' + text.slice(0, 80)); }
+  });
+}
+function toast(text) {
+  const el = document.getElementById('toast');
+  el.textContent = text; el.classList.add('show');
+  clearTimeout(toast._t); toast._t = setTimeout(() => el.classList.remove('show'), 2400);
+}
+const state = {
+  view: 'library', q: '', sort: 'newest', limit: 24, offset: 0,
+  categories: new Set(), statuses: new Set(), shop: '',
+  items: [], itemsError: '', unclassified: { archives: [], images: [] }, uncError: '',
+};
+function fmtBytes(n) {
+  const v = Number(n) || 0;
+  if (v < 1024) return v + ' B';
+  const u = ['KB', 'MB', 'GB', 'TB']; let x = v / 1024; let i = 0;
+  while (x >= 1024 && i < u.length - 1) { x /= 1024; i += 1; }
+  return (x >= 100 ? Math.round(x) : x.toFixed(1)) + ' ' + u[i];
+}
+function fmtDate(ms) {
+  const n = Number(ms); if (!n) return '—';
+  const d = new Date(n);
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+function itemStatus(it) {
+  if (it.enrichStatus === 'ok' || it.enrichStatus === 'pending') return it.enrichStatus;
+  if (!it.coverUrl && !it.boothId) return 'nocover';
+  return it.title ? 'ok' : 'pending';
+}
+function coverSrc(it) {
+  if (it.coverUrl) return it.coverUrl;
+  if (it.boothId) return '/api/library/item-thumb?boothId=' + encodeURIComponent(it.boothId);
+  return '';
+}
+
+// ── 数据：/api/library/items + /api/library/unclassified（A 的 msg-a53）────────
+// 未上线时显示明确失败（带接口名与状态）；**不回退**到 /api/files 平铺列表（那会把图片也当卡片）。
+async function loadItems() {
+  state.itemsError = '';
+  try {
+    const d = await api('/api/library/items');
+    state.items = Array.isArray(d.items) ? d.items : [];
+  } catch (e) {
+    state.items = [];
+    state.itemsError = '读取失败：GET /api/library/items — ' + (e && e.message ? e.message : e);
+  }
+}
+async function loadUnclassified() {
+  state.uncError = '';
+  try {
+    const d = await api('/api/library/unclassified');
+    state.unclassified = { archives: Array.isArray(d.archives) ? d.archives : [], images: Array.isArray(d.images) ? d.images : [] };
+  } catch (e) {
+    state.unclassified = { archives: [], images: [] };
+    state.uncError = '读取失败：GET /api/library/unclassified — ' + (e && e.message ? e.message : e);
+  }
+}
+
+// ── 筛选 / 排序 / 分页 ──────────────────────────────────────────────────────
+function filteredItems() {
+  const q = state.q.trim().toLowerCase();
+  let out = state.items.filter((it) => {
+    if (state.categories.size && !state.categories.has(String(it.category || '未分类'))) return false;
+    if (state.shop && !String(it.shop || '').toLowerCase().includes(state.shop.toLowerCase())) return false;
+    if (state.statuses.size && !state.statuses.has(itemStatus(it))) return false;
+    if (q) {
+      const files = Array.isArray(it.files) ? it.files.map((f) => f.fileName || '').join(' ') : '';
+      const hay = [it.title, it.shop, it.boothId, files].map((x) => String(x || '').toLowerCase()).join(' ');
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+  const by = state.sort;
+  out = out.slice().sort((a, b) => {
+    if (by === 'title') return String(a.title || '').localeCompare(String(b.title || ''), 'zh-CN');
+    if (by === 'booth') return String(a.boothId || '').localeCompare(String(b.boothId || ''));
+    if (by === 'size') return (Number(b.totalBytes) || 0) - (Number(a.totalBytes) || 0);
+    return (Number(b.addedAt) || Number(b.boothId) || 0) - (Number(a.addedAt) || Number(a.boothId) || 0);
+  });
+  return out;
+}
+function pageSlice(list) {
+  const maxOffset = Math.max(0, (Math.ceil(list.length / state.limit) - 1) * state.limit);
+  if (state.offset > maxOffset) state.offset = maxOffset;
+  return list.slice(state.offset, state.offset + state.limit);
+}
+
+// ── 渲染 ────────────────────────────────────────────────────────────────────
+const VIEW_TITLE = { home: 'Home', lists: 'Lists', notify: 'Notify', library: 'Library', unclassified: '未分类', settings: 'Settings' };
+function setActiveNav() {
+  document.querySelectorAll('.nav-item').forEach((b) => b.classList.toggle('active', b.dataset.view === state.view));
+  document.getElementById('pageTitle').textContent = VIEW_TITLE[state.view] || 'Library';
+  document.getElementById('filterToggle').hidden = state.view !== 'library';
+  document.getElementById('sort').hidden = state.view !== 'library';
+}
+function updateNavCounts() {
+  const n = state.items.length;
+  const unc = state.unclassified.archives.length + state.unclassified.images.length;
+  document.getElementById('navHomeCount').textContent = String(n);
+  document.getElementById('navLibraryCount').textContent = String(n);
+  document.getElementById('navListsCount').textContent = String(new Set(state.items.map((i) => String(i.category || '未分类'))).size);
+  document.getElementById('navUncCount').textContent = String(unc);
+  const pending = state.items.filter((i) => itemStatus(i) !== 'ok').length;
+  const badge = document.getElementById('navNotifyBadge');
+  if (pending > 0) { badge.hidden = false; badge.textContent = String(pending); } else { badge.hidden = true; }
+}
+function statusDot(it) {
+  const s = itemStatus(it);
+  const cls = s === 'ok' ? 'ok' : (s === 'pending' ? 'pending' : 'nocover');
+  const label = s === 'ok' ? '已归类' : (s === 'pending' ? '待补抓' : '封面缺失');
+  return '<span class="status-dot ' + cls + '" title="' + label + '"></span>';
+}
+function cardHtml(it) {
+  const title = it.title || ('BOOTH ' + it.boothId);
+  const shop = it.shop || '未识别店铺';
+  const src = coverSrc(it);
+  const img = src
+    ? '<img src="' + esc(src) + '" alt="' + esc(title) + '" loading="lazy" onerror="this.parentNode.innerHTML=\'<span>封面缺失</span>\'">'
+    : '<span>封面缺失</span>';
+  const fileCount = Number(it.fileCount) || (Array.isArray(it.files) ? it.files.length : 0);
+  return '<button class="card" type="button" data-booth="' + esc(it.boothId) + '">'
+    + statusDot(it)
+    + '<div class="thumb">' + img + '</div>'
+    + '<div class="card-body"><div class="card-title">' + esc(title) + '</div><div class="card-shop">' + esc(shop) + '</div>'
+    + '<div class="card-foot"><span>' + fileCount + ' 个文件</span><span>' + fmtBytes(it.totalBytes) + '</span></div></div>'
+    + '<span class="cat-badge">' + esc(it.category || '未分类') + '</span>'
+    + '</button>';
+}
+function renderLibrary() {
+  const list = filteredItems();
+  const page = pageSlice(list);
+  const body = document.getElementById('viewBody');
+  renderPager(list.length);
+  if (state.itemsError) { body.innerHTML = '<div class="err">' + esc(state.itemsError) + '</div>'; return; }
+  if (!list.length) {
+    body.innerHTML = state.items.length
+      ? '<div class="empty">没有符合筛选条件的商品。试试清空搜索或筛选。</div>'
+      : '<div class="empty">还没有归档的压缩包（白名单群上传带 BOOTH 号的压缩包后自动归类）</div>';
+    return;
+  }
+  body.innerHTML = '<div class="grid" id="grid">' + page.map(cardHtml).join('') + '</div>';
+  document.querySelectorAll('#grid .card').forEach((el) => el.addEventListener('click', () => openDrawer(el.dataset.booth)));
+}
+function renderPager(total) {
+  const el = document.getElementById('pager');
+  const pages = Math.max(1, Math.ceil(total / state.limit));
+  const page = Math.min(pages, Math.floor(state.offset / state.limit) + 1);
+  const from = total ? state.offset + 1 : 0;
+  const to = Math.min(total, state.offset + state.limit);
+  el.innerHTML = '<button class="btn" id="prevPage" type="button"' + (state.offset <= 0 ? ' disabled' : '') + '>上一页</button>'
+    + '<span>第 ' + page + ' / ' + pages + ' 页 · 共 ' + total + ' 件</span>'
+    + '<label>每页 <select class="btn" id="pageSize"><option value="24"' + (state.limit === 24 ? ' selected' : '') + '>24</option><option value="48"' + (state.limit === 48 ? ' selected' : '') + '>48</option></select></label>'
+    + '<button class="btn" id="nextPage" type="button"' + (state.offset + state.limit >= total ? ' disabled' : '') + '>下一页</button>';
+  document.getElementById('prevPage').addEventListener('click', () => { state.offset = Math.max(0, state.offset - state.limit); renderLibrary(); });
+  document.getElementById('nextPage').addEventListener('click', () => { state.offset = Math.min(Math.max(0, (Math.ceil(total / state.limit) - 1) * state.limit), state.offset + state.limit); renderLibrary(); });
+  document.getElementById('pageSize').addEventListener('change', (e) => { state.limit = Number(e.target.value) || 24; state.offset = 0; renderLibrary(); });
+}
+function renderHome() {
+  const n = state.items.length;
+  const bytes = state.items.reduce((s, i) => s + (Number(i.totalBytes) || 0), 0);
+  const pending = state.items.filter((i) => itemStatus(i) !== 'ok').length;
+  document.getElementById('viewBody').innerHTML = '<div class="metrics">'
+    + '<div class="metric"><span>商品</span><b>' + n + '</b></div>'
+    + '<div class="metric"><span>占用</span><b>' + fmtBytes(bytes) + '</b></div>'
+    + '<div class="metric"><span>待补抓/缺封面</span><b>' + pending + '</b></div>'
+    + '<div class="metric"><span>未分类文件</span><b>' + (state.unclassified.archives.length + state.unclassified.images.length) + '</b></div>'
+    + '</div><div class="empty">Home 概览：Library 看商品卡片；未分类处理对不上号的文件。</div>';
+}
+function renderLists() {
+  const map = new Map();
+  for (const it of state.items) {
+    const c = String(it.category || '未分类');
+    map.set(c, (map.get(c) || 0) + 1);
+  }
+  const rows = [...map.entries()].sort((a, b) => b[1] - a[1])
+    .map(([c, n]) => '<button class="card" type="button" data-cat="' + esc(c) + '" style="cursor:pointer;padding:14px;flex-direction:row;align-items:center;justify-content:space-between"><span>' + esc(c) + '</span><b>' + n + '</b></button>').join('');
+  document.getElementById('viewBody').innerHTML = (rows ? '<div class="grid">' + rows + '</div>' : '<div class="empty">还没有分类（先有商品卡片才会出现分类）。</div>')
+    + '<div class="empty" style="margin-top:14px">点分类跳回 Library 并按该分类筛选。</div>';
+  document.querySelectorAll('#viewBody .card[data-cat]').forEach((el) => el.addEventListener('click', () => {
+    state.view = 'library'; state.categories = new Set([el.dataset.cat]); state.offset = 0; renderAll();
+  }));
+}
+function renderNotify() {
+  const pending = state.items.filter((i) => itemStatus(i) === 'pending');
+  const nocover = state.items.filter((i) => itemStatus(i) === 'nocover');
+  const block = (title, arr, hint) => '<h3 style="font-size:14px;margin:16px 0 8px">' + title + '（' + arr.length + '）</h3>'
+    + (arr.length ? '<div class="grid">' + arr.map(cardHtml).join('') + '</div>' : '<div class="empty">' + hint + '</div>');
+  document.getElementById('viewBody').innerHTML =
+    '<div class="metrics"><div class="metric"><span>待补抓</span><b>' + pending.length + '</b></div><div class="metric"><span>封面缺失</span><b>' + nocover.length + '</b></div></div>'
+    + block('待补抓', pending, '没有待补抓的商品。') + block('封面缺失', nocover, '没有缺封面的商品。');
+  document.querySelectorAll('#viewBody .card[data-booth]').forEach((el) => el.addEventListener('click', () => openDrawer(el.dataset.booth)));
+}
+function renderUnclassified() {
+  const body = document.getElementById('viewBody');
+  if (state.uncError) { body.innerHTML = '<div class="err">' + esc(state.uncError) + '</div>'; return; }
+  const { archives, images } = state.unclassified;
+  const row = (f) => '<div class="un-row"><span class="fn" title="' + esc(f.fileName) + '">' + esc(f.fileName || ('#' + f.id)) + '</span>'
+    + '<span style="color:var(--muted)">' + fmtBytes(f.bytes) + '</span>'
+    + '<input type="text" placeholder="分类" data-cat-for="' + esc(f.id) + '" aria-label="为 ' + esc(f.fileName) + ' 设置分类">'
+    + '<button class="btn" type="button" data-apply="' + esc(f.id) + '">归类</button></div>';
+  const col = (title, arr, hint) => '<h3 style="font-size:14px;margin:0 0 8px">' + title + '（' + arr.length + '）</h3>'
+    + (arr.length ? arr.map(row).join('') : '<div class="empty">' + hint + '</div>');
+  body.innerHTML = '<div class="two-col">'
+    + '<section>' + col('压缩包', archives, '没有待分类的压缩包。') + '</section>'
+    + '<section>' + col('图片', images, '没有待分类的图片。') + '</section>'
+    + '</div>';
+  body.querySelectorAll('button[data-apply]').forEach((btn) => btn.addEventListener('click', async () => {
+    const id = btn.dataset.apply;
+    const input = body.querySelector('input[data-cat-for="' + id + '"]');
+    const category = String(input && input.value || '').trim();
+    btn.disabled = true;
+    try {
+      const r = await api('/api/files/category', 'POST', { id: Number(id), category });
+      if (!r || r.ok !== true) throw new Error((r && r.error) || '接口返回失败');
+      state.unclassified.archives = state.unclassified.archives.filter((x) => String(x.id) !== String(id));
+      state.unclassified.images = state.unclassified.images.filter((x) => String(x.id) !== String(id));
+      toast('已归类：' + (category || '未分类'));
+      renderAll();
+    } catch (e) {
+      toast('归类失败：POST /api/files/category — ' + (e && e.message ? e.message : e));
+    } finally { btn.disabled = false; }
+  }));
+}
+function renderSettings() {
+  const bytes = state.items.reduce((s, i) => s + (Number(i.totalBytes) || 0), 0);
+  document.getElementById('viewBody').innerHTML = '<div class="metrics">'
+    + '<div class="metric"><span>商品数</span><b>' + state.items.length + '</b></div>'
+    + '<div class="metric"><span>占用</span><b>' + fmtBytes(bytes) + '</b></div>'
+    + '<div class="metric"><span>未分类</span><b>' + (state.unclassified.archives.length + state.unclassified.images.length) + '</b></div>'
+    + '</div><div class="empty">Settings 占位：上限 / 保留期 / 清理策略由后端配置控制，这里只读展示。</div>';
+}
+function renderCategoriesFilter() {
+  const box = document.getElementById('filterCategories');
+  if (!box) return;
+  const cats = [...new Set(state.items.map((i) => String(i.category || '未分类')))].sort();
+  box.innerHTML = cats.map((c) => '<label><input type="checkbox" class="cat" value="' + esc(c) + '"'
+    + (state.categories.has(c) ? ' checked' : '') + '>' + esc(c) + '</label>').join('') || '<span style="color:var(--muted)">（暂无）</span>';
+  box.querySelectorAll('input.cat').forEach((el) => el.addEventListener('change', () => {
+    if (el.checked) state.categories.add(el.value); else state.categories.delete(el.value);
+    state.offset = 0; renderLibrary();
+  }));
+}
+function renderAll() {
+  setActiveNav();
+  updateNavCounts();
+  document.getElementById('metrics').hidden = state.view !== 'library';
+  if (state.view === 'home') renderHome();
+  else if (state.view === 'lists') renderLists();
+  else if (state.view === 'notify') renderNotify();
+  else if (state.view === 'unclassified') renderUnclassified();
+  else if (state.view === 'settings') renderSettings();
+  else renderLibrary();
+  renderCategoriesFilter();
+}
+
+// ── 详情抽屉 ────────────────────────────────────────────────────────────────
+async function openDrawer(boothId) {
+  const it = state.items.find((x) => String(x.boothId) === String(boothId)) || { boothId };
+  const drawer = document.getElementById('drawer');
+  const mask = document.getElementById('drawerMask');
+  document.getElementById('drawerTitle').textContent = it.title || ('BOOTH ' + boothId);
+  const body = document.getElementById('drawerBody');
+  body.innerHTML = '<div class="empty">加载中…</div>';
+  mask.classList.add('open'); drawer.classList.add('open');
+  document.getElementById('drawerClose').focus();
+  let detail = null; let images = []; let meta = null; let err = '';
+  try {
+    // A 的契约：{ item, images, meta }（images / meta 与 item 平级，不在 item 里面）
+    const d = await api('/api/library/item/' + encodeURIComponent(boothId));
+    detail = d.item || null;
+    images = Array.isArray(d.images) ? d.images : (detail && Array.isArray(detail.images) ? detail.images : []);
+    meta = d.meta || (detail && detail.meta) || null;
+  } catch (e) {
+    err = '详情读取失败：GET /api/library/item/' + encodeURIComponent(boothId) + ' — ' + (e && e.message ? e.message : e);
+  }
+  const merged = detail || it;
+  const files = Array.isArray(merged.files) ? merged.files : [];
+  body.innerHTML = '<div class="kv">'
+    + '<span>标题</span><div>' + esc(merged.title || '—') + '</div>'
+    + '<span>店铺</span><div>' + esc(merged.shop || '—') + '</div>'
+    + '<span>分类</span><div>' + esc(merged.category || '未分类') + '</div>'
+    + '<span>BOOTH</span><div>' + (merged.boothUrl ? '<a href="' + esc(merged.boothUrl) + '" target="_blank" rel="noopener">在 BOOTH 打开</a>' : '—') + '</div>'
+    + '<span>文件数</span><div>' + (merged.fileCount || files.length) + ' 个 · ' + fmtBytes(merged.totalBytes) + '</div>'
+    + '</div>'
+    + (err ? '<div class="err">' + esc(err) + '</div>' : '')
+    + '<h3 style="font-size:14px;margin:14px 0 6px">压缩包（' + files.length + '）</h3>'
+    + (files.length ? files.map((f) => '<div class="file-row"><span class="fn" title="' + esc(f.relPath || '') + '">' + esc(f.fileName) + '</span>'
+      + '<span>' + fmtBytes(f.bytes) + '</span><span>' + fmtDate(f.archivedAt) + '</span></div>').join('')
+      : '<div class="empty">这个商品还没有压缩包。</div>')
+    + '<h3 style="font-size:14px;margin:14px 0 6px">同号图片（素材，' + images.length + '）</h3>'
+    + (images.length ? '<div class="img-grid">' + images.map((im) => '<figure><img src="' + esc(im.thumbUrl || '') + '" alt="' + esc(im.fileName) + '" loading="lazy" onerror="this.parentNode.innerHTML=\'<figcaption>无缩略图</figcaption>\'"><figcaption>' + esc(im.fileName) + '</figcaption></figure>').join('') + '</div>'
+      : '<div class="empty">没有同号图片。</div>')
+    + '<div class="drawer-actions">'
+    + '<button class="btn primary" id="dEnrich" type="button"' + (files.length ? '' : ' disabled') + '>重新抓取</button>'
+    + '<button class="btn" id="dBooth" type="button"' + (merged.boothUrl ? '' : ' disabled') + '>在 BOOTH 打开</button>'
+    + '</div>'
+    + (meta ? '<h3 style="font-size:14px;margin:14px 0 6px">meta</h3><pre class="meta">' + esc(JSON.stringify(meta, null, 2).slice(0, 4000)) + '</pre>' : '');
+  const enrichBtn = document.getElementById('dEnrich');
+  if (enrichBtn) enrichBtn.addEventListener('click', () => enrichItem(files, enrichBtn));
+  const boothBtn = document.getElementById('dBooth');
+  if (boothBtn && merged.boothUrl) boothBtn.addEventListener('click', () => window.open(merged.boothUrl, '_blank', 'noopener'));
+}
+function closeDrawer() {
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('drawerMask').classList.remove('open');
+}
+async function enrichItem(files, btn) {
+  const ids = (Array.isArray(files) ? files : []).map((f) => f.id).filter((x) => x != null);
+  if (!ids.length) { toast('没有可重新抓取的文件'); return; }
+  if (btn) btn.disabled = true;
+  try {
+    const r = await api('/api/files/enrich', 'POST', { ids });
+    if (!r || r.ok !== true) throw new Error((r && r.error) || '接口返回失败');
+    toast('已重新抓取');
+    await reloadAll();
+    closeDrawer();
+  } catch (e) {
+    toast('重新抓取失败：POST /api/files/enrich — ' + (e && e.message ? e.message : e));
+  } finally { if (btn) btn.disabled = false; }
+}
+
+// ── 事件 ────────────────────────────────────────────────────────────────────
+let searchTimer = null;
+document.getElementById('q').addEventListener('input', (e) => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => { state.q = e.target.value; state.offset = 0; renderLibrary(); }, 300);
+});
+document.getElementById('sort').addEventListener('change', (e) => { state.sort = e.target.value; state.offset = 0; renderLibrary(); });
+document.getElementById('filterToggle').addEventListener('click', (e) => {
+  const open = document.getElementById('filters').classList.toggle('open');
+  e.currentTarget.setAttribute('aria-expanded', open ? 'true' : 'false');
+});
+document.getElementById('filterShop').addEventListener('input', (e) => { state.shop = e.target.value; state.offset = 0; renderLibrary(); });
+document.querySelectorAll('input.st').forEach((el) => el.addEventListener('change', () => {
+  if (el.checked) state.statuses.add(el.value); else state.statuses.delete(el.value);
+  state.offset = 0; renderLibrary();
+}));
+document.getElementById('refresh').addEventListener('click', () => reloadAll());
+document.getElementById('drawerClose').addEventListener('click', closeDrawer);
+document.getElementById('drawerMask').addEventListener('click', closeDrawer);
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDrawer(); });
+document.querySelectorAll('.nav-item').forEach((b) => b.addEventListener('click', () => {
+  state.view = b.dataset.view; state.offset = 0; renderAll();
+}));
+
+async function reloadAll() {
+  await Promise.all([loadItems(), loadUnclassified()]);
+  renderAll();
+}
+document.getElementById('viewBody').innerHTML = '<div class="empty">加载中…</div>';
+reloadAll();
+</script>
+</body>
+</html>

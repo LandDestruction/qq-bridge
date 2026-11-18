@@ -1,0 +1,45 @@
+{
+  "dsh": {
+    "baseUrl": "http://127.0.0.1:13707",
+    "provider": "<MODEL_PROVIDER 例如 deepseek-account>",
+    "model": "<MODEL_ID 例如 deepseek-flash>",
+    "reasoningEffort": "high",
+    "authToken": "",
+    "visionModels": [
+      "<VISION_MODEL 能看图的模型 id；不看图可留空数组>"
+    ],
+    "modelFallbacks": []
+  },
+  "snowluma": {
+    "wsUrl": "ws://127.0.0.1:3001",
+    "httpUrl": "http://127.0.0.1:3000",
+    "accessToken": "<SNOWLUMA_ONEBOT_ACCESS_TOKEN 与 SnowLuma 面板里的一模一样>",
+    "followDiscoveredEndpoint": true
+  },
+  "sessionCwd": "",
+  "agentPreset": "qq-chat-v2",
+  "workspaceTitle": "QQ 聊天",
+  "ownerQQ": "<QQ号 你自己的 QQ 数字号>",
+  "allow": {
+    "_note": "填你自己的群号/QQ 号（纯数字，不带尖括号）。留空数组=谁都不理；allowAllWhenEmpty 保持 false。",
+    "private": [
+      "<QQ号>"
+    ],
+    "groups": [
+      "<群号>"
+    ]
+  },
+  "deny": {
+    "private": [],
+    "groups": []
+  },
+  "allowAllWhenEmpty": false,
+  "ackMessage": "🤔 收到，正在思考…",
+  "sendDelayMs": 300,
+  "questionTimeoutMs": 300000,
+  "consolePort": 3100,
+  "consoleToken": "",
+  "role": {
+    "maxInjectChars": 6000
+  }
+}

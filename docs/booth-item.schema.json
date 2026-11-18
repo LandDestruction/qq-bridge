@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qq-bridge.local/schemas/booth-item.schema.json",
+  "title": "BoothItem",
+  "description": "BOOTH 商品元数据（字段来源：KonoAsset BoothJsonSchema + 我们扩展）",
+  "type": "object",
+  "required": [
+    "id",
+    "title",
+    "fetchedAt"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer",
+      "description": "BOOTH item id（文件名前缀那串数字）"
+    },
+    "title": {
+      "type": "string"
+    },
+    "shop": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        }
+      }
+    },
+    "price": {
+      "type": "string",
+      "description": "BOOTH 返回的是带货币符号的字符串，如 '¥ 290~'"
+    },
+    "category": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "parent": {
+          "type": "string"
+        }
+      }
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "isAdult": {
+      "type": "boolean",
+      "description": "R-18；是否落盘由策略决定"
+    },
+    "isSoldOut": {
+      "type": "boolean"
+    },
+    "isEndOfSale": {
+      "type": "boolean"
+    },
+    "publishedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "images": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "thumbUrl": {
+      "type": "string"
+    },
+    "wishListsCount": {
+      "type": "integer"
+    },
+    "url": {
+      "type": "string"
+    },
+    "fetchedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "我们抓取的时间（缓存与过期用）"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "booth-json",
+        "html-ldjson",
+        "manual"
+      ]
+    },
+    "localFiles": {
+      "type": "array",
+      "description": "我们扩展：同一商品下落的本地文件（KonoAsset 没有这一层，它是文件系统扫描）",
+      "items": {
+        "type": "object",
+        "properties": {
+          "relPath": {
+            "type": "string"
+          },
+          "bytes": {
+            "type": "integer"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "zip",
+              "image",
+              "other"
+            ]
+          },
+          "addedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    },
+    "note": {
+      "type": "string",
+      "description": "群友原话/备注"
+    },
+    "unmatched": {
+      "type": "boolean",
+      "description": "未匹配到 BOOTH（本地文件有、抓不到元数据）"
+    }
+  }
+}

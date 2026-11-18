@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang='zh-CN' data-theme='light' data-brand='QQ DeepSeek Bot'>
+<head>
+<meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>UI 设计系统 · 预览样张</title>
+<!--
+  单文件样张：零外链（无 CDN、无远程字体、无外链图片/CSS/JS）。
+  token 只在本文件 :root / [data-theme=dark] 定义，组件类前缀 qdb-，变量前缀 --ui-。
+  品牌名只在 <html data-brand> 这一处出现，JS 读出来填到 [data-brand-text]。
+-->
+<style>
+/* ============ 1. token（浅色） ============ */
+:root {
+  /* 色板 · 浅色（粉白） */
+  --ui-bg: #FDF8FA;
+  --ui-surface: #FFFFFF;
+  --ui-surface-2: #FFF4F8;
+  --ui-border: #F2DDE6;
+  --ui-border-strong: #9E818F;
+  --ui-text: #241A20;
+  --ui-text-2: #5C4E56;
+  --ui-text-3: #8A7B83;
+  --ui-text-meta: #766870;
+  --ui-accent: #E8467C;
+  --ui-accent-ink: #C2185B;
+  --ui-accent-hover: #A81250;
+  --ui-accent-soft: #FCE4EE;
+  --ui-on-accent: #FFFFFF;
+  --ui-success: #2E9E6B;
+  --ui-success-ink: #1E7A4F;
+  --ui-success-soft: #E3F5EC;
+  --ui-warn: #B26A00;
+  --ui-warn-ink: #8A5200;
+  --ui-warn-soft: #FFF2DC;
+  --ui-danger: #C62828;
+  --ui-danger-ink: #C62828;
+  --ui-danger-hover: #A32020;
+  --ui-danger-soft: #FCE8E8;
+  --ui-focus: #C2185B;
+  --ui-skeleton: #F7E7EE;
+  --ui-skeleton-shine: #FFFDFE;
+
+  /* 字体阶梯（中文优先系统栈，零下载） */
+  --ui-font-sans: system-ui, -apple-system, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif;
+  --ui-font-mono: ui-monospace, 'SFMono-Regular', 'Cascadia Mono', Consolas, 'Microsoft YaHei UI', monospace;
+  --ui-font-12: 12px;
+  --ui-font-13: 13px;
+  --ui-font-14: 14px;
+  --ui-font-16: 16px;
+  --ui-font-20: 20px;
+  --ui-font-24: 24px;
+  --ui-leading-tight: 1.25;
+  --ui-leading: 1.55;
+  --ui-leading-loose: 1.75;
+
+  /* 间距 4/8/12/16/24/32 */
+  --ui-space-1: 4px;
+  --ui-space-2: 8px;
+  --ui-space-3: 12px;
+  --ui-space-4: 16px;
+  --ui-space-5: 24px;
+  --ui-space-6: 32px;
+
+  /* 圆角 6/10/14（+ 胶囊） */
+  --ui-radius-1: 6px;
+  --ui-radius-2: 10px;
+  --ui-radius-3: 14px;
+  --ui-radius-pill: 999px;
+
+  /* 阴影两级 */
+  --ui-shadow-1: 0 1px 2px rgba(36, 26, 32, 0.06), 0 1px 3px rgba(36, 26, 32, 0.04);
+  --ui-shadow-2: 0 8px 24px rgba(36, 26, 32, 0.10), 0 2px 8px rgba(36, 26, 32, 0.06);
+
+  /* 动效 120/180/240 ease-out */
+  --ui-dur-1: 120ms;
+  --ui-dur-2: 180ms;
+  --ui-dur-3: 240ms;
+  --ui-ease: cubic-bezier(0.2, 0, 0, 1);
+
+  /* 焦点环 2px + 2px 偏移 */
+  --ui-focus-width: 2px;
+  --ui-focus-offset: 2px;
+
+  /* 布局 */
+  --ui-sidebar-w: 220px;
+  --ui-topbar-h: 56px;
+  --ui-content-max: 1200px;
+}
+
+/* ============ 2. token（深色） ============
+   两份定义是有意的：静态断言可以机械核对「每个 token 在两种主题下都存在」。
+   几何/字号/动效与主题无关，重复写同值，避免断言按主题分叉。 */
+[data-theme='dark'] {
+  --ui-bg: #171216;
+  --ui-surface: #201A1E;
+  --ui-surface-2: #2A2227;
+  --ui-border: #3A2E35;
+  --ui-border-strong: #85707C;
+  --ui-text: #F7EEF3;
+  --ui-text-2: #C3B4BC;
+  --ui-text-3: #9C8E96;
+  --ui-text-meta: #A899A1;
+  --ui-accent: #FF7EB0;
+  --ui-accent-ink: #FF7EB0;
+  --ui-accent-hover: #FFA3C7;
+  --ui-accent-soft: #3A2030;
+  --ui-on-accent: #241A20;
+  --ui-success: #4CC38A;
+  --ui-success-ink: #4CC38A;
+  --ui-success-soft: #1E3A2C;
+  --ui-warn: #E0A030;
+  --ui-warn-ink: #E0A030;
+  --ui-warn-soft: #3A2C10;
+  --ui-danger: #FF6B6B;
+  --ui-danger-ink: #FF6B6B;
+  --ui-danger-hover: #FF8A8A;
+  --ui-danger-soft: #3A1F22;
+  --ui-focus: #FF7EB0;
+  --ui-skeleton: #2A2227;
+  --ui-skeleton-shine: #332A30;
+
+  --ui-font-sans: system-ui, -apple-system, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif;
+  --ui-font-mono: ui-monospace, 'SFMono-Regular', 'Cascadia Mono', Consolas, 'Microsoft YaHei UI', monospace;
+  --ui-font-12: 12px;
+  --ui-font-13: 13px;
+  --ui-font-14: 14px;
+  --ui-font-16: 16px;
+  --ui-font-20: 20px;
+  --ui-font-24: 24px;
+  --ui-leading-tight: 1.25;
+  --ui-leading: 1.55;
+  --ui-leading-loose: 1.75;
+
+  --ui-space-1: 4px;
+  --ui-space-2: 8px;
+  --ui-space-3: 12px;
+  --ui-space-4: 16px;
+  --ui-space-5: 24px;
+  --ui-space-6: 32px;
+
+  --ui-radius-1: 6px;
+  --ui-radius-2: 10px;
+  --ui-radius-3: 14px;
+  --ui-radius-pill: 999px;
+
+  --ui-shadow-1: 0 1px 2px rgba(0, 0, 0, 0.45), 0 1px 3px rgba(0, 0, 0, 0.35);
+  --ui-shadow-2: 0 12px 32px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.40);
+
+  --ui-dur-1: 120ms;
+  --ui-dur-2: 180ms;
+  --ui-dur-3: 240ms;
+  --ui-ease: cubic-bezier(0.2, 0, 0, 1);
+
+  --ui-focus-width: 2px;
+  --ui-focus-offset: 2px;
+
+  --ui-sidebar-w: 220px;
+  --ui-topbar-h: 56px;
+  --ui-content-max: 1200px;
+}
+
+/* ============ 3. 基础 ============ */
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--ui-bg);
+  color: var(--ui-text);
+  font-family: var(--ui-font-sans);
+  font-size: var(--ui-font-14);
+  line-height: var(--ui-leading);
+  -webkit-font-smoothing: antialiased;
+  transition: background var(--ui-dur-2) var(--ui-ease), color var(--ui-dur-2) var(--ui-ease);
+}
+a { color: var(--ui-accent-ink); text-decoration: none; }
+a:hover { text-decoration: underline; }
+h1, h2, h3, p { margin: 0; }
+h1 { font-size: var(--ui-font-20); line-height: var(--ui-leading-tight); font-weight: 650; }
+h2 { font-size: var(--ui-font-16); line-height: var(--ui-leading-tight); font-weight: 650; }
+h3 { font-size: var(--ui-font-14); line-height: var(--ui-leading-tight); font-weight: 650; }
+code, kbd, samp { font-family: var(--ui-font-mono); font-size: var(--ui-font-12); }
+:where(button, input, select, textarea, a, summary):focus-visible {
+  outline: var(--ui-focus-width) solid var(--ui-focus);
+  outline-offset: var(--ui-focus-offset);
+  border-radius: var(--ui-radius-1);
+}
+.qdb-sr {
+  position: absolute; width: 1px; height: 1px; margin: -1px;
+  padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+.qdb-skip {
+  position: absolute; left: var(--ui-space-4); top: -48px;
+  background: var(--ui-surface); color: var(--ui-text);
+  padding: var(--ui-space-2) var(--ui-space-3);
+  border: 1px solid var(--ui-border-strong); border-radius: var(--ui-radius-2);
+  z-index: 60; transition: top var(--ui-dur-1) var(--ui-ease);
+}
+.qdb-skip:focus { top: var(--ui-space-2); }
+
+/* ============ 4. 外壳布局 ============ */
+.qdb-shell {
+  display: grid;
+  grid-template-columns: var(--ui-sidebar-w) minmax(0, 1fr);
+  min-height: 100%;
+}
+.qdb-sidebar {
+  display: flex; flex-direction: column; gap: var(--ui-space-4);
+  padding: var(--ui-space-4) var(--ui-space-3);
+  background: var(--ui-surface);
+  border-right: 1px solid var(--ui-border);
+}
+.qdb-brand { display: flex; align-items: center; gap: var(--ui-space-2); padding: 0 var(--ui-space-1); }
+.qdb-brand__mark {
+  display: grid; place-items: center;
+  width: 28px; height: 28px; border-radius: var(--ui-radius-2);
+  background: var(--ui-accent-ink); color: var(--ui-on-accent);
+  font-size: var(--ui-font-13); font-weight: 700;
+}
+.qdb-brand__name { font-size: var(--ui-font-13); font-weight: 650; color: var(--ui-text); white-space: nowrap; }
+.qdb-nav { display: flex; flex-direction: column; gap: var(--ui-space-1); }
+.qdb-nav__group { font-size: var(--ui-font-12); color: var(--ui-text-3); padding: var(--ui-space-2) var(--ui-space-2) var(--ui-space-1); }
+.qdb-nav-item {
+  display: flex; align-items: center; gap: var(--ui-space-2);
+  padding: var(--ui-space-2) var(--ui-space-2);
+  border-radius: var(--ui-radius-2);
+  color: var(--ui-text-2);
+  font-size: var(--ui-font-13);
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background var(--ui-dur-1) var(--ui-ease), color var(--ui-dur-1) var(--ui-ease);
+}
+.qdb-nav-item:hover { background: var(--ui-surface-2); color: var(--ui-text); text-decoration: none; }
+.qdb-nav-item[aria-current='page'] {
+  background: var(--ui-accent-soft); color: var(--ui-accent-ink); font-weight: 600;
+}
+.qdb-nav-item__count {
+  margin-left: auto; font-family: var(--ui-font-mono); font-size: var(--ui-font-12); color: var(--ui-text-meta);
+}
+.qdb-sidebar__foot { margin-top: auto; font-size: var(--ui-font-12); color: var(--ui-text-meta); padding: 0 var(--ui-space-2); }
+.qdb-main { display: flex; flex-direction: column; min-width: 0; }
+.qdb-topbar {
+  position: sticky; top: 0; z-index: 20;
+  display: flex; align-items: center; justify-content: space-between; gap: var(--ui-space-3);
+  min-height: var(--ui-topbar-h);
+  padding: var(--ui-space-2) var(--ui-space-5);
+  background: var(--ui-surface);
+  border-bottom: 1px solid var(--ui-border);
+}
+.qdb-topbar__title { display: flex; align-items: center; gap: var(--ui-space-2); min-width: 0; }
+.qdb-topbar__actions { display: flex; align-items: center; gap: var(--ui-space-2); }
+.qdb-vp { font-size: var(--ui-font-12); color: var(--ui-text-meta); white-space: nowrap; }
+.qdb-content {
+  width: 100%; max-width: var(--ui-content-max);
+  margin: 0 auto; padding: var(--ui-space-5);
+  display: flex; flex-direction: column; gap: var(--ui-space-5);
+  min-width: 0;
+}
+.qdb-section { display: flex; flex-direction: column; gap: var(--ui-space-3); min-width: 0; }
+.qdb-section__head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--ui-space-3); flex-wrap: wrap; }
+.qdb-section__desc { font-size: var(--ui-font-12); color: var(--ui-text-meta); }
+.qdb-grid { display: grid; gap: var(--ui-space-3); grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.qdb-row { display: flex; align-items: center; gap: var(--ui-space-2); flex-wrap: wrap; }
+.qdb-stack { display: flex; flex-direction: column; gap: var(--ui-space-3); }
+
+/* ============ 5. 按钮 ============ */
+.qdb-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--ui-space-1);
+  height: 34px; padding: 0 var(--ui-space-3);
+  font-family: inherit; font-size: var(--ui-font-14); font-weight: 550;
+  color: var(--ui-text);
+  background: var(--ui-surface);
+  border: 1px solid var(--ui-border-strong);
+  border-radius: var(--ui-radius-2);
+  cursor: pointer;
+  transition: background var(--ui-dur-1) var(--ui-ease), border-color var(--ui-dur-1) var(--ui-ease), color var(--ui-dur-1) var(--ui-ease), box-shadow var(--ui-dur-1) var(--ui-ease);
+}
+.qdb-btn--primary { background: var(--ui-accent-ink); border-color: var(--ui-accent-ink); color: var(--ui-on-accent); }
+.qdb-btn--primary:hover { background: var(--ui-accent-hover); border-color: var(--ui-accent-hover); }
+.qdb-btn--secondary { background: var(--ui-surface-2); border-color: var(--ui-border); color: var(--ui-text); }
+.qdb-btn--secondary:hover { border-color: var(--ui-border-strong); }
+.qdb-btn--ghost { background: transparent; border-color: transparent; color: var(--ui-accent-ink); }
+.qdb-btn--ghost:hover { background: var(--ui-accent-soft); }
+.qdb-btn--danger { background: var(--ui-danger); border-color: var(--ui-danger); color: var(--ui-on-accent); }
+.qdb-btn--danger:hover { background: var(--ui-danger-hover); border-color: var(--ui-danger-hover); }
+.qdb-btn--sm { height: 28px; padding: 0 var(--ui-space-2); font-size: var(--ui-font-13); }
+.qdb-btn[disabled] { opacity: 0.55; cursor: not-allowed; }
+.qdb-btn:active { transform: translateY(1px); }
+
+/* ============ 6. 表单 ============ */
+.qdb-field { display: flex; flex-direction: column; gap: var(--ui-space-1); }
+.qdb-field__label { font-size: var(--ui-font-13); color: var(--ui-text-2); font-weight: 550; }
+.qdb-field__hint { font-size: var(--ui-font-12); color: var(--ui-text-meta); }
+.qdb-field__err { font-size: var(--ui-font-12); color: var(--ui-danger-ink); }
+.qdb-input {
+  width: 100%; height: 34px; padding: 0 var(--ui-space-3);
+  font-family: inherit; font-size: var(--ui-font-14); color: var(--ui-text);
+  background: var(--ui-surface);
+  border: 1px solid var(--ui-border-strong);
+  border-radius: var(--ui-radius-2);
+  transition: border-color var(--ui-dur-1) var(--ui-ease), box-shadow var(--ui-dur-1) var(--ui-ease);
+}
+.qdb-input::placeholder { color: var(--ui-text-3); }
+.qdb-input[aria-invalid='true'] { border-color: var(--ui-danger); }
+.qdb-input[disabled] { background: var(--ui-surface-2); color: var(--ui-text-3); cursor: not-allowed; }
+.qdb-select-wrap { position: relative; display: block; }
+.qdb-select {
+  width: 100%; height: 34px; padding: 0 var(--ui-space-6) 0 var(--ui-space-3);
+  font-family: inherit; font-size: var(--ui-font-14); color: var(--ui-text);
+  background: var(--ui-surface);
+  border: 1px solid var(--ui-border-strong); border-radius: var(--ui-radius-2);
+  appearance: none; cursor: pointer;
+}
+.qdb-select-wrap::after {
+  content: '▾'; position: absolute; right: var(--ui-space-3); top: 50%; transform: translateY(-50%);
+  color: var(--ui-text-2); pointer-events: none; font-size: var(--ui-font-12);
+}
+.qdb-switch { display: inline-flex; align-items: center; gap: var(--ui-space-2); cursor: pointer; font-size: var(--ui-font-14); color: var(--ui-text); }
+.qdb-switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.qdb-switch__track {
+  position: relative; width: 38px; height: 22px; border-radius: var(--ui-radius-pill);
+  background: var(--ui-surface-2); border: 1px solid var(--ui-border-strong);
+  transition: background var(--ui-dur-2) var(--ui-ease), border-color var(--ui-dur-2) var(--ui-ease);
+  flex: none;
+}
+.qdb-switch__track::after {
+  content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px;
+  border-radius: 50%; background: var(--ui-surface);
+  box-shadow: var(--ui-shadow-1);
+  transition: transform var(--ui-dur-2) var(--ui-ease);
+}
+.qdb-switch input:checked + .qdb-switch__track { background: var(--ui-accent-ink); border-color: var(--ui-accent-ink); }
+.qdb-switch input:checked + .qdb-switch__track::after { transform: translateX(16px); }
+.qdb-switch input:focus-visible + .qdb-switch__track { outline: var(--ui-focus-width) solid var(--ui-focus); outline-offset: var(--ui-focus-offset); }
+.qdb-check { display: inline-flex; align-items: flex-start; gap: var(--ui-space-2); cursor: pointer; font-size: var(--ui-font-14); color: var(--ui-text); }
+.qdb-check input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.qdb-check__box {
+  width: 16px; height: 16px; margin-top: 3px; flex: none;
+  border: 1px solid var(--ui-border-strong); border-radius: var(--ui-radius-1);
+  background: var(--ui-surface); display: grid; place-items: center;
+  transition: background var(--ui-dur-1) var(--ui-ease), border-color var(--ui-dur-1) var(--ui-ease);
+}
+.qdb-check__box::after { content: '✓'; font-size: var(--ui-font-12); color: var(--ui-on-accent); opacity: 0; }
+.qdb-check input:checked + .qdb-check__box { background: var(--ui-accent-ink); border-color: var(--ui-accent-ink); }
+.qdb-check input:checked + .qdb-check__box::after { opacity: 1; }
+.qdb-check input:focus-visible + .qdb-check__box { outline: var(--ui-focus-width) solid var(--ui-focus); outline-offset: var(--ui-focus-offset); }
+
+/* ============ 7. 卡片 / 徽章 / 状态点 / 进度 / 骨架 / 空态 ============ */
+.qdb-card {
+  background: var(--ui-surface);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-3);
+  box-shadow: var(--ui-shadow-1);
+  padding: var(--ui-space-4);
+  display: flex; flex-direction: column; gap: var(--ui-space-2);
+  min-width: 0;
+}
+.qdb-card__head { display: flex; align-items: center; justify-content: space-between; gap: var(--ui-space-2); }
+.qdb-card__title { font-size: var(--ui-font-14); font-weight: 650; color: var(--ui-text); }
+.qdb-card__meta { font-size: var(--ui-font-12); color: var(--ui-text-meta); }
+.qdb-card--flat { box-shadow: none; }
+.qdb-badge {
+  display: inline-flex; align-items: center; gap: var(--ui-space-1);
+  height: 20px; padding: 0 var(--ui-space-2);
+  border-radius: var(--ui-radius-pill);
+  font-size: var(--ui-font-12); font-weight: 550;
+  background: var(--ui-surface-2); color: var(--ui-text-2);
+  white-space: nowrap;
+}
+.qdb-badge--success { background: var(--ui-success-soft); color: var(--ui-success-ink); }
+.qdb-badge--warn { background: var(--ui-warn-soft); color: var(--ui-warn-ink); }
+.qdb-badge--danger { background: var(--ui-danger-soft); color: var(--ui-danger-ink); }
+.qdb-badge--info { background: var(--ui-accent-soft); color: var(--ui-accent-ink); }
+.qdb-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; flex: none; background: var(--ui-text-3); }
+.qdb-dot--ok { background: var(--ui-success); }
+.qdb-dot--warn { background: var(--ui-warn); }
+.qdb-dot--err { background: var(--ui-danger); }
+.qdb-dot--idle { background: var(--ui-text-3); }
+.qdb-dot--live { animation: qdb-pulse 2s var(--ui-ease) infinite; }
+@keyframes qdb-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(46, 158, 107, 0.55); }
+  50% { box-shadow: 0 0 0 4px rgba(46, 158, 107, 0); }
+}
+.qdb-progress { height: 6px; border-radius: var(--ui-radius-pill); background: var(--ui-surface-2); overflow: hidden; }
+.qdb-progress > i { display: block; height: 100%; background: var(--ui-accent-ink); border-radius: inherit; transition: width var(--ui-dur-3) var(--ui-ease); }
+.qdb-skeleton {
+  display: block; height: 12px; border-radius: var(--ui-radius-1);
+  background: linear-gradient(90deg, var(--ui-skeleton) 25%, var(--ui-skeleton-shine) 37%, var(--ui-skeleton) 63%);
+  background-size: 400% 100%;
+  animation: qdb-shimmer 1.4s var(--ui-ease) infinite;
+}
+@keyframes qdb-shimmer { from { background-position: 100% 50%; } to { background-position: 0 50%; } }
+.qdb-skeleton--lg { height: 20px; }
+.qdb-empty {
+  display: flex; flex-direction: column; align-items: center; gap: var(--ui-space-2);
+  padding: var(--ui-space-5) var(--ui-space-3);
+  border: 1px dashed var(--ui-border-strong); border-radius: var(--ui-radius-3);
+  color: var(--ui-text-2); font-size: var(--ui-font-13); text-align: center;
+}
+.qdb-empty__icon { font-size: var(--ui-font-24); color: var(--ui-text-3); line-height: 1; }
+
+/* ============ 8. 表格 ============ */
+.qdb-table-wrap { width: 100%; overflow-x: auto; border: 1px solid var(--ui-border); border-radius: var(--ui-radius-3); background: var(--ui-surface); }
+.qdb-table { width: 100%; border-collapse: collapse; font-size: var(--ui-font-13); }
+.qdb-table th, .qdb-table td { padding: var(--ui-space-2) var(--ui-space-3); text-align: left; white-space: nowrap; }
+.qdb-table th {
+  font-size: var(--ui-font-12); font-weight: 600; color: var(--ui-text-2);
+  background: var(--ui-surface-2);
+  border-bottom: 1px solid var(--ui-border);
+}
+.qdb-table td { border-bottom: 1px solid var(--ui-border); color: var(--ui-text-2); }
+.qdb-table tbody tr:last-child td { border-bottom: 0; }
+.qdb-table tbody tr:hover td { background: var(--ui-surface-2); }
+.qdb-table .qdb-num { font-family: var(--ui-font-mono); color: var(--ui-text); }
+.qdb-table .qdb-strong { color: var(--ui-text); font-weight: 600; }
+
+/* ============ 9. 标签页 ============ */
+.qdb-tabs { display: inline-flex; gap: 2px; padding: 3px; background: var(--ui-surface-2); border-radius: var(--ui-radius-2); }
+.qdb-tab {
+  appearance: none; border: 0; background: transparent;
+  padding: var(--ui-space-1) var(--ui-space-3);
+  font-family: inherit; font-size: var(--ui-font-13); color: var(--ui-text-2);
+  border-radius: var(--ui-radius-1); cursor: pointer;
+  transition: background var(--ui-dur-1) var(--ui-ease), color var(--ui-dur-1) var(--ui-ease);
+}
+.qdb-tab:hover { color: var(--ui-text); }
+.qdb-tab[aria-selected='true'] { background: var(--ui-surface); color: var(--ui-text); font-weight: 600; box-shadow: var(--ui-shadow-1); }
+.qdb-panel[hidden] { display: none; }
+
+/* ============ 10. 抽屉 / toast ============ */
+.qdb-scrim {
+  position: fixed; inset: 0; z-index: 39;
+  background: rgba(23, 18, 22, 0.42);
+  opacity: 0; visibility: hidden;
+  transition: opacity var(--ui-dur-2) var(--ui-ease), visibility var(--ui-dur-2) var(--ui-ease);
+}
+.qdb-scrim[data-open='true'] { opacity: 1; visibility: visible; }
+.qdb-drawer {
+  position: fixed; top: 0; right: 0; z-index: 40;
+  display: flex; flex-direction: column; gap: var(--ui-space-3);
+  width: min(420px, 92vw); height: 100%;
+  padding: var(--ui-space-4);
+  background: var(--ui-surface);
+  border-left: 1px solid var(--ui-border);
+  box-shadow: var(--ui-shadow-2);
+  transform: translateX(100%);
+  transition: transform var(--ui-dur-3) var(--ui-ease);
+  overflow-y: auto;
+}
+.qdb-drawer[data-open='true'] { transform: translateX(0); }
+.qdb-drawer__head { display: flex; align-items: center; justify-content: space-between; gap: var(--ui-space-2); }
+.qdb-toasts { position: fixed; right: var(--ui-space-4); bottom: var(--ui-space-4); z-index: 45; display: flex; flex-direction: column; gap: var(--ui-space-2); max-width: min(360px, 92vw); }
+.qdb-toast {
+  display: flex; align-items: flex-start; gap: var(--ui-space-2);
+  padding: var(--ui-space-3);
+  background: var(--ui-surface);
+  border: 1px solid var(--ui-border);
+  border-left: 3px solid var(--ui-accent-ink);
+  border-radius: var(--ui-radius-2);
+  box-shadow: var(--ui-shadow-2);
+  font-size: var(--ui-font-13); color: var(--ui-text);
+  animation: qdb-toast-in var(--ui-dur-3) var(--ui-ease);
+}
+.qdb-toast--success { border-left-color: var(--ui-success); }
+.qdb-toast__body { min-width: 0; }
+.qdb-toast__title { font-weight: 600; }
+.qdb-toast__msg { color: var(--ui-text-2); }
+@keyframes qdb-toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* ============ 11. 仪表盘样张 ============ */
+.qdb-stat { display: flex; flex-direction: column; gap: var(--ui-space-1); }
+.qdb-stat__label { font-size: var(--ui-font-12); color: var(--ui-text-2); }
+.qdb-stat__value { font-size: var(--ui-font-24); font-weight: 650; line-height: var(--ui-leading-tight); font-family: var(--ui-font-mono); }
+.qdb-stat__foot { display: flex; align-items: center; gap: var(--ui-space-1); font-size: var(--ui-font-12); color: var(--ui-text-meta); }
+.qdb-stat__delta { font-size: var(--ui-font-12); color: var(--ui-success-ink); font-weight: 600; }
+.qdb-stat__delta--down { color: var(--ui-danger-ink); }
+.qdb-session { display: flex; align-items: center; gap: var(--ui-space-3); padding: var(--ui-space-2); border-radius: var(--ui-radius-2); min-width: 0; }
+.qdb-session:hover { background: var(--ui-surface-2); }
+.qdb-session__avatar {
+  width: 32px; height: 32px; flex: none; border-radius: var(--ui-radius-2);
+  display: grid; place-items: center;
+  background: var(--ui-accent-soft); color: var(--ui-accent-ink);
+  font-size: var(--ui-font-12); font-weight: 650;
+}
+.qdb-session__body { min-width: 0; flex: 1; display: flex; flex-direction: column; }
+.qdb-session__name { font-size: var(--ui-font-13); font-weight: 600; color: var(--ui-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.qdb-session__last { font-size: var(--ui-font-12); color: var(--ui-text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.qdb-session__time { font-size: var(--ui-font-12); color: var(--ui-text-meta); font-family: var(--ui-font-mono); white-space: nowrap; }
+.qdb-log {
+  margin: 0; padding: var(--ui-space-3);
+  background: var(--ui-surface-2);
+  border: 1px solid var(--ui-border); border-radius: var(--ui-radius-2);
+  font-family: var(--ui-font-mono); font-size: var(--ui-font-12); line-height: var(--ui-leading-loose);
+  max-height: 260px; overflow: auto; white-space: normal;
+}
+.qdb-log__row { display: flex; gap: var(--ui-space-2); flex-wrap: wrap; }
+.qdb-log__t { color: var(--ui-text-meta); flex: none; }
+.qdb-log__lv { flex: none; font-weight: 700; }
+.qdb-log__lv--info { color: var(--ui-accent-ink); }
+.qdb-log__lv--ok { color: var(--ui-success-ink); }
+.qdb-log__lv--warn { color: var(--ui-warn-ink); }
+.qdb-log__lv--err { color: var(--ui-danger-ink); }
+.qdb-log__msg { color: var(--ui-text-2); min-width: 0; word-break: break-word; }
+
+/* ============ 12. 响应式：1280 / 768 / 360 ============ */
+@media (max-width: 900px) {
+  .qdb-shell { grid-template-columns: minmax(0, 1fr); }
+  .qdb-sidebar {
+    flex-direction: row; align-items: center; gap: var(--ui-space-3);
+    padding: var(--ui-space-2) var(--ui-space-3);
+    border-right: 0; border-bottom: 1px solid var(--ui-border);
+    overflow-x: auto;
+  }
+  .qdb-nav { flex-direction: row; gap: var(--ui-space-1); }
+  .qdb-nav__group { display: none; }
+  .qdb-nav-item__count { display: none; }
+  .qdb-sidebar__foot { display: none; }
+  .qdb-content { padding: var(--ui-space-4); }
+}
+@media (max-width: 560px) {
+  .qdb-topbar { padding: var(--ui-space-2) var(--ui-space-3); }
+  .qdb-content { padding: var(--ui-space-3); gap: var(--ui-space-4); }
+  .qdb-vp { display: none; }
+  .qdb-card { padding: var(--ui-space-3); }
+  .qdb-stat__value { font-size: var(--ui-font-20); }
+  .qdb-grid { grid-template-columns: minmax(0, 1fr); }
+  .qdb-brand__name { max-width: 40vw; overflow: hidden; text-overflow: ellipsis; }
+  /* 手机宽度下侧栏拆两行：品牌一行、导航一行自带横向滚动，避免品牌名把导航挤到屏外 */
+  .qdb-sidebar { flex-wrap: wrap; row-gap: var(--ui-space-1); }
+  .qdb-nav { flex: 1 0 100%; overflow-x: auto; padding-bottom: 2px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+</style>
+</head>
+<body>
+<a class='qdb-skip' href='#main'>跳到主内容</a>
+<div class='qdb-shell'>
+  <aside class='qdb-sidebar' aria-label='侧边栏'>
+    <div class='qdb-brand'>
+      <span class='qdb-brand__mark' aria-hidden='true'>D</span>
+      <span class='qdb-brand__name' data-brand-text>（品牌名占位）</span>
+    </div>
+    <nav class='qdb-nav' aria-label='主导航'>
+      <div class='qdb-nav__group'>运营</div>
+      <a class='qdb-nav-item' href='#dash' aria-current='page'><span class='qdb-dot qdb-dot--ok' aria-hidden='true'></span>仪表盘<span class='qdb-nav-item__count'>4</span></a>
+      <a class='qdb-nav-item' href='#sessions'><span class='qdb-dot qdb-dot--idle' aria-hidden='true'></span>会话<span class='qdb-nav-item__count'>7</span></a>
+      <a class='qdb-nav-item' href='#services'><span class='qdb-dot qdb-dot--warn' aria-hidden='true'></span>服务<span class='qdb-nav-item__count'>5</span></a>
+      <a class='qdb-nav-item' href='#logs'><span class='qdb-dot qdb-dot--idle' aria-hidden='true'></span>日志</a>
+      <div class='qdb-nav__group'>系统</div>
+      <a class='qdb-nav-item' href='#system'>设置</a>
+      <a class='qdb-nav-item' href='#system'>关于</a>
+    </nav>
+    <div class='qdb-sidebar__foot'>设计系统 v1.0 · 单文件样张</div>
+  </aside>
+
+  <div class='qdb-main'>
+    <header class='qdb-topbar'>
+      <div class='qdb-topbar__title'>
+        <h1>设计系统</h1>
+        <span class='qdb-badge qdb-badge--info'>v1.0</span>
+      </div>
+      <div class='qdb-topbar__actions'>
+        <span class='qdb-vp'>视口 <strong id='vpWidth'>—</strong>px</span>
+        <button class='qdb-btn qdb-btn--secondary qdb-btn--sm' id='themeToggle' type='button' aria-pressed='false'>
+          <span id='themeIcon' aria-hidden='true'>☾</span><span id='themeLabel'>深色</span>
+        </button>
+      </div>
+    </header>
+
+    <main id='main' class='qdb-content'>
+
+      <!-- ===== 色板 ===== -->
+      <section class='qdb-section' aria-labelledby='s-palette'>
+        <div class='qdb-section__head'>
+          <h2 id='s-palette'>色板</h2>
+          <span class='qdb-section__desc'>白底为主，粉只占约 10%；粉色仅作装饰与填充，文字一律用深粉</span>
+        </div>
+        <div class='qdb-grid'>
+          <div class='qdb-card qdb-card--flat'>
+            <div class='qdb-card__head'><span class='qdb-card__title'>浅色</span><span class='qdb-card__meta'>light</span></div>
+            <div class='qdb-row'>
+              <span class='qdb-badge'>底 #FDF8FA</span>
+              <span class='qdb-badge'>面 #FFFFFF</span>
+              <span class='qdb-badge'>次级 #FFF4F8</span>
+              <span class='qdb-badge'>边框 #F2DDE6</span>
+              <span class='qdb-badge qdb-badge--info'>强调 #E8467C</span>
+              <span class='qdb-badge qdb-badge--info'>文字粉 #C2185B</span>
+              <span class='qdb-badge qdb-badge--success'>success #2E9E6B</span>
+              <span class='qdb-badge qdb-badge--warn'>warn #B26A00</span>
+              <span class='qdb-badge qdb-badge--danger'>danger #C62828</span>
+            </div>
+          </div>
+          <div class='qdb-card qdb-card--flat'>
+            <div class='qdb-card__head'><span class='qdb-card__title'>深色</span><span class='qdb-card__meta'>dark</span></div>
+            <div class='qdb-row'>
+              <span class='qdb-badge'>底 #171216</span>
+              <span class='qdb-badge'>面 #201A1E</span>
+              <span class='qdb-badge'>次级 #2A2227</span>
+              <span class='qdb-badge'>边框 #3A2E35</span>
+              <span class='qdb-badge qdb-badge--info'>强调 #FF7EB0</span>
+              <span class='qdb-badge qdb-badge--success'>success #4CC38A</span>
+              <span class='qdb-badge qdb-badge--warn'>warn #E0A030</span>
+              <span class='qdb-badge qdb-badge--danger'>danger #FF6B6B</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== 字体 / 间距 / 圆角 / 阴影 ===== -->
+      <section class='qdb-section' aria-labelledby='s-type'>
+        <div class='qdb-section__head'>
+          <h2 id='s-type'>字体与尺度</h2>
+          <span class='qdb-section__desc'>系统字体栈，零下载；阶梯 12 / 13 / 14 / 16 / 20 / 24</span>
+        </div>
+        <div class='qdb-grid'>
+          <div class='qdb-card'>
+            <div class='qdb-card__head'><span class='qdb-card__title'>字体阶梯</span></div>
+            <div class='qdb-stack'>
+              <div style='font-size: var(--ui-font-24)'>24 · 数字与页面大标题</div>
+              <div style='font-size: var(--ui-font-20)'>20 · 区块标题</div>
+              <div style='font-size: var(--ui-font-16)'>16 · 卡片标题 Aa 0123</div>
+              <div style='font-size: var(--ui-font-14)'>14 · 正文默认 Aa 0123</div>
+              <div style='font-size: var(--ui-font-13); color: var(--ui-text-2)'>13 · 表格与次要正文</div>
+              <div style='font-size: var(--ui-font-12); color: var(--ui-text-meta)'>12 · 时间戳与辅助说明</div>
+            </div>
+          </div>
+          <div class='qdb-card'>
+            <div class='qdb-card__head'><span class='qdb-card__title'>间距与圆角</span></div>
+            <div class='qdb-stack'>
+              <div class='qdb-row'>
+                <span class='qdb-badge'>4</span><span class='qdb-badge'>8</span><span class='qdb-badge'>12</span>
+                <span class='qdb-badge'>16</span><span class='qdb-badge'>24</span><span class='qdb-badge'>32</span>
+              </div>
+              <div class='qdb-row'>
+                <span class='qdb-badge' style='border-radius: var(--ui-radius-1); background: var(--ui-surface-2); color: var(--ui-text-2)'>圆角 6</span>
+                <span class='qdb-badge' style='border-radius: var(--ui-radius-2); background: var(--ui-surface-2); color: var(--ui-text-2)'>圆角 10</span>
+                <span class='qdb-badge' style='border-radius: var(--ui-radius-3); background: var(--ui-surface-2); color: var(--ui-text-2)'>圆角 14</span>
+              </div>
+              <div class='qdb-row'>
+                <span class='qdb-card qdb-card--flat' style='padding: var(--ui-space-2); box-shadow: var(--ui-shadow-1)'>阴影 1</span>
+                <span class='qdb-card qdb-card--flat' style='padding: var(--ui-space-2); box-shadow: var(--ui-shadow-2)'>阴影 2</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== 按钮 ===== -->
+      <section class='qdb-section' aria-labelledby='s-btn'>
+        <div class='qdb-section__head'>
+          <h2 id='s-btn'>按钮</h2>
+          <span class='qdb-section__desc'>实心粉只给主操作；次级和幽灵用于并列与低权重</span>
+        </div>
+        <div class='qdb-card'>
+          <div class='qdb-row'>
+            <button class='qdb-btn qdb-btn--primary' type='button'>保存设置</button>
+            <button class='qdb-btn qdb-btn--secondary' type='button'>取消</button>
+            <button class='qdb-btn qdb-btn--ghost' type='button'>查看日志</button>
+            <button class='qdb-btn qdb-btn--danger' type='button'>停止服务</button>
+            <button class='qdb-btn qdb-btn--primary' type='button' disabled>不可用</button>
+            <button class='qdb-btn qdb-btn--primary qdb-btn--sm' type='button'>小号 28</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== 表单 ===== -->
+      <section class='qdb-section' aria-labelledby='s-form'>
+        <div class='qdb-section__head'>
+          <h2 id='s-form'>表单控件</h2>
+          <span class='qdb-section__desc'>输入 / 下拉 / 开关 / 复选框；标签 13px，提示 12px</span>
+        </div>
+        <div class='qdb-grid'>
+          <div class='qdb-card qdb-stack'>
+            <div class='qdb-field'>
+              <label class='qdb-field__label' for='f-name'>群名称</label>
+              <input class='qdb-input' id='f-name' type='text' value='开发测试群' autocomplete='off'>
+              <span class='qdb-field__hint'>用于归档目录命名</span>
+            </div>
+            <div class='qdb-field'>
+              <label class='qdb-field__label' for='f-empty'>占位示例</label>
+              <input class='qdb-input' id='f-empty' type='text' placeholder='输入关键词，回车搜索'>
+            </div>
+            <div class='qdb-field'>
+              <label class='qdb-field__label' for='f-bad'>错误态</label>
+              <input class='qdb-input' id='f-bad' type='text' value='不在白名单' aria-invalid='true'>
+              <span class='qdb-field__err'>该群号不在白名单里</span>
+            </div>
+            <div class='qdb-field'>
+              <label class='qdb-field__label' for='f-off'>禁用态</label>
+              <input class='qdb-input' id='f-off' type='text' value='只读' disabled>
+            </div>
+          </div>
+          <div class='qdb-card qdb-stack'>
+            <div class='qdb-field'>
+              <label class='qdb-field__label' for='sel-mode'>唤醒模式</label>
+              <span class='qdb-select-wrap'>
+                <select class='qdb-select' id='sel-mode'>
+                  <option>潜水（只在被叫时醒）</option>
+                  <option>活跃（每条都看）</option>
+                  <option>静默</option>
+                </select>
+              </span>
+            </div>
+            <div class='qdb-field'>
+              <span class='qdb-field__label'>开关</span>
+              <label class='qdb-switch'>
+                <input type='checkbox' checked>
+                <span class='qdb-switch__track' aria-hidden='true'></span>
+                <span>自动归档</span>
+              </label>
+              <label class='qdb-switch'>
+                <input type='checkbox'>
+                <span class='qdb-switch__track' aria-hidden='true'></span>
+                <span>夜间静音</span>
+              </label>
+            </div>
+            <div class='qdb-field'>
+              <span class='qdb-field__label'>复选框</span>
+              <label class='qdb-check'>
+                <input type='checkbox' checked>
+                <span class='qdb-check__box' aria-hidden='true'></span>
+                <span>记录 token 用量</span>
+              </label>
+              <label class='qdb-check'>
+                <input type='checkbox'>
+                <span class='qdb-check__box' aria-hidden='true'></span>
+                <span>同步到外部档案室</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== 卡片 / 徽章 / 状态点 / 进度 / 骨架 / 空态 ===== -->
+      <section class='qdb-section' aria-labelledby='s-comp'>
+        <div class='qdb-section__head'>
+          <h2 id='s-comp'>容器与反馈</h2>
+          <span class='qdb-section__desc'>卡片 14px 圆角 + 1 级阴影；徽章与状态点只用语义色</span>
+        </div>
+        <div class='qdb-grid'>
+          <div class='qdb-card'>
+            <div class='qdb-card__head'>
+              <span class='qdb-card__title'>群消息同步</span>
+              <span class='qdb-badge qdb-badge--success'><span class='qdb-dot qdb-dot--ok' aria-hidden='true'></span>进行中</span>
+            </div>
+            <p class='qdb-card__meta'>已完成 620 / 800 条，预计 2 分钟</p>
+            <div class='qdb-progress' role='progressbar' aria-valuenow='78' aria-valuemin='0' aria-valuemax='100'><i style='width: 78%'></i></div>
+            <div class='qdb-row'>
+              <span class='qdb-badge'>徽章</span>
+              <span class='qdb-badge qdb-badge--success'>成功</span>
+              <span class='qdb-badge qdb-badge--warn'>警告</span>
+              <span class='qdb-badge qdb-badge--danger'>失败</span>
+              <span class='qdb-badge qdb-badge--info'>信息</span>
+            </div>
+            <div class='qdb-row'>
+              <span class='qdb-dot qdb-dot--ok qdb-dot--live' aria-hidden='true'></span><span class='qdb-card__meta'>在线</span>
+              <span class='qdb-dot qdb-dot--warn' aria-hidden='true'></span><span class='qdb-card__meta'>降级</span>
+              <span class='qdb-dot qdb-dot--err' aria-hidden='true'></span><span class='qdb-card__meta'>断开</span>
+              <span class='qdb-dot qdb-dot--idle' aria-hidden='true'></span><span class='qdb-card__meta'>空闲</span>
+            </div>
+          </div>
+          <div class='qdb-card'>
+            <div class='qdb-card__head'><span class='qdb-card__title'>加载骨架</span><span class='qdb-card__meta'>首屏占位</span></div>
+            <div class='qdb-stack'>
+              <span class='qdb-skeleton qdb-skeleton--lg' style='width: 60%'></span>
+              <span class='qdb-skeleton' style='width: 92%'></span>
+              <span class='qdb-skeleton' style='width: 84%'></span>
+              <span class='qdb-skeleton' style='width: 46%'></span>
+            </div>
+            <div class='qdb-empty'>
+              <span class='qdb-empty__icon' aria-hidden='true'>☾</span>
+              <strong>今天还没有新会话</strong>
+              <span>群里有消息时会自动出现</span>
+              <button class='qdb-btn qdb-btn--secondary qdb-btn--sm' type='button'>刷新</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== 表格 ===== -->
+      <section class='qdb-section' aria-labelledby='s-table'>
+        <div class='qdb-section__head'>
+          <h2 id='s-table'>表格</h2>
+          <span class='qdb-section__desc'>窄屏横向滚动，不压缩列；数字用等宽体</span>
+        </div>
+        <div class='qdb-table-wrap'>
+          <table class='qdb-table'>
+            <caption class='qdb-sr'>服务健康度示例表</caption>
+            <thead>
+              <tr>
+                <th scope='col'>服务</th><th scope='col'>状态</th><th scope='col'>延迟</th>
+                <th scope='col'>今日请求</th><th scope='col'>错误率</th><th scope='col'>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class='qdb-strong'>桥接</td>
+                <td><span class='qdb-badge qdb-badge--success'>运行中</span></td>
+                <td class='qdb-num'>12 ms</td><td class='qdb-num'>1,284</td><td class='qdb-num'>0.2%</td>
+                <td><button class='qdb-btn qdb-btn--ghost qdb-btn--sm' type='button'>详情</button></td>
+              </tr>
+              <tr>
+                <td class='qdb-strong'>网关</td>
+                <td><span class='qdb-badge qdb-badge--success'>已连接</span></td>
+                <td class='qdb-num'>38 ms</td><td class='qdb-num'>967</td><td class='qdb-num'>0.0%</td>
+                <td><button class='qdb-btn qdb-btn--ghost qdb-btn--sm' type='button'>详情</button></td>
+              </tr>
+              <tr>
+                <td class='qdb-strong'>语音转写</td>
+                <td><span class='qdb-badge qdb-badge--warn'>降级</span></td>
+                <td class='qdb-num'>1,204 ms</td><td class='qdb-num'>58</td><td class='qdb-num'>4.1%</td>
+                <td><button class='qdb-btn qdb-btn--ghost qdb-btn--sm' type='button'>详情</button></td>
+              </tr>
+              <tr>
+                <td class='qdb-strong'>本地 TTS</td>
+                <td><span class='qdb-badge qdb-badge--danger'>未启动</span></td>
+                <td class='qdb-num'>—</td><td class='qdb-num'>0</td><td class='qdb-num'>—</td>
+                <td><button class='qdb-btn qdb-btn--ghost qdb-btn--sm' type='button'>详情</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ===== 标签页 + 抽屉 + toast ===== -->
+      <section class='qdb-section' aria-labelledby='s-tabs'>
+        <div class='qdb-section__head'>
+          <h2 id='s-tabs'>标签页 / 抽屉 / toast</h2>
+          <span class='qdb-section__desc'>标签页只切内容不换页；抽屉 240ms 滑入，Esc 关闭</span>
+        </div>
+        <div class='qdb-card'>
+          <div class='qdb-row'>
+            <div class='qdb-tabs' role='tablist' aria-label='时间范围'>
+              <button class='qdb-tab' role='tab' type='button' aria-selected='true' aria-controls='p-24h' id='t-24h'>近 24 小时</button>
+              <button class='qdb-tab' role='tab' type='button' aria-selected='false' aria-controls='p-7d' id='t-7d'>近 7 天</button>
+              <button class='qdb-tab' role='tab' type='button' aria-selected='false' aria-controls='p-30d' id='t-30d'>近 30 天</button>
+            </div>
+            <button class='qdb-btn qdb-btn--secondary qdb-btn--sm' type='button' id='openDrawer'>打开抽屉</button>
+            <button class='qdb-btn qdb-btn--ghost qdb-btn--sm' type='button' id='pushToast'>弹一条 toast</button>
+          </div>
+          <div class='qdb-panel' role='tabpanel' id='p-24h' aria-labelledby='t-24h'>
+            <p class='qdb-card__meta'>近 24 小时：1,284 个回合，平均 3.2 秒；错误 3 次（均为上游超时）。</p>
+          </div>
+          <div class='qdb-panel' role='tabpanel' id='p-7d' aria-labelledby='t-7d' hidden>
+            <p class='qdb-card__meta'>近 7 天：8,932 个回合，平均 3.4 秒；错误 21 次。</p>
+          </div>
+          <div class='qdb-panel' role='tabpanel' id='p-30d' aria-labelledby='t-30d' hidden>
+            <p class='qdb-card__meta'>近 30 天：37,410 个回合，峰值出现在周末晚 21:00。</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== 仪表盘样张 ===== -->
+      <section class='qdb-section' id='dash' aria-labelledby='s-dash'>
+        <div class='qdb-section__head'>
+          <h2 id='s-dash'>仪表盘样张</h2>
+          <span class='qdb-section__desc'>4 状态卡 + 服务列表 + 会话列表 + 日志流，全部用上面同一套 token</span>
+        </div>
+
+        <div class='qdb-grid'>
+          <div class='qdb-card qdb-stat'>
+            <span class='qdb-stat__label'>在线服务</span>
+            <span class='qdb-stat__value'>4<span class='qdb-card__meta'> / 5</span></span>
+            <span class='qdb-stat__foot'><span class='qdb-dot qdb-dot--ok' aria-hidden='true'></span>桥接 · 网关 · 档案室 · 控制台</span>
+          </div>
+          <div class='qdb-card qdb-stat'>
+            <span class='qdb-stat__label'>今日消息</span>
+            <span class='qdb-stat__value'>1,284</span>
+            <span class='qdb-stat__foot'><span class='qdb-stat__delta'>+12.4%</span>较昨日</span>
+          </div>
+          <div class='qdb-card qdb-stat'>
+            <span class='qdb-stat__label'>DSH 回合</span>
+            <span class='qdb-stat__value'>967</span>
+            <span class='qdb-stat__foot'><span class='qdb-stat__delta'>+3.1%</span>平均 3.2 秒</span>
+          </div>
+          <div class='qdb-card qdb-stat'>
+            <span class='qdb-stat__label'>异常</span>
+            <span class='qdb-stat__value'>3</span>
+            <span class='qdb-stat__foot'><span class='qdb-stat__delta qdb-stat__delta--down'>+2</span>均为上游超时</span>
+          </div>
+        </div>
+
+        <div class='qdb-card' id='services'>
+          <div class='qdb-card__head'>
+            <span class='qdb-card__title'>服务列表</span>
+            <span class='qdb-card__meta'>每 30 秒自检</span>
+          </div>
+          <div class='qdb-table-wrap'>
+            <table class='qdb-table'>
+              <caption class='qdb-sr'>服务列表</caption>
+              <thead>
+                <tr><th scope='col'>服务</th><th scope='col'>状态</th><th scope='col'>端口</th><th scope='col'>延迟</th><th scope='col'>负载</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class='qdb-strong'>桥接</td><td><span class='qdb-dot qdb-dot--ok' aria-hidden='true'></span> 运行中</td><td class='qdb-num'>3100</td><td class='qdb-num'>12 ms</td><td style='min-width: 120px'><div class='qdb-progress'><i style='width: 32%'></i></div></td></tr>
+                <tr><td class='qdb-strong'>QQ 网关</td><td><span class='qdb-dot qdb-dot--ok' aria-hidden='true'></span> 已连接</td><td class='qdb-num'>3001</td><td class='qdb-num'>38 ms</td><td style='min-width: 120px'><div class='qdb-progress'><i style='width: 24%'></i></div></td></tr>
+                <tr><td class='qdb-strong'>DSH</td><td><span class='qdb-dot qdb-dot--ok' aria-hidden='true'></span> 就绪</td><td class='qdb-num'>3080</td><td class='qdb-num'>96 ms</td><td style='min-width: 120px'><div class='qdb-progress'><i style='width: 61%'></i></div></td></tr>
+                <tr><td class='qdb-strong'>语音转写</td><td><span class='qdb-dot qdb-dot--warn' aria-hidden='true'></span> 降级</td><td class='qdb-num'>8791</td><td class='qdb-num'>1,204 ms</td><td style='min-width: 120px'><div class='qdb-progress'><i style='width: 88%'></i></div></td></tr>
+                <tr><td class='qdb-strong'>本地 TTS</td><td><span class='qdb-dot qdb-dot--err' aria-hidden='true'></span> 未启动</td><td class='qdb-num'>8765</td><td class='qdb-num'>—</td><td style='min-width: 120px'><div class='qdb-progress'><i style='width: 0%'></i></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class='qdb-grid'>
+          <div class='qdb-card' id='sessions'>
+            <div class='qdb-card__head'>
+              <span class='qdb-card__title'>会话列表</span>
+              <span class='qdb-badge qdb-badge--info'>7 个</span>
+            </div>
+            <div class='qdb-stack' style='gap: 0'>
+              <div class='qdb-session'>
+                <span class='qdb-session__avatar' aria-hidden='true'>测</span>
+                <span class='qdb-session__body'>
+                  <span class='qdb-session__name'>开发测试群</span>
+                  <span class='qdb-session__last'>那这个截图里的报错是什么</span>
+                </span>
+                <span class='qdb-session__time'>02:41</span>
+                <span class='qdb-badge qdb-badge--info'>3</span>
+              </div>
+              <div class='qdb-session'>
+                <span class='qdb-session__avatar' aria-hidden='true'>运</span>
+                <span class='qdb-session__body'>
+                  <span class='qdb-session__name'>运维值班</span>
+                  <span class='qdb-session__last'>服务起来了，你看下日志</span>
+                </span>
+                <span class='qdb-session__time'>02:12</span>
+              </div>
+              <div class='qdb-session'>
+                <span class='qdb-session__avatar' aria-hidden='true'>闲</span>
+                <span class='qdb-session__body'>
+                  <span class='qdb-session__name'>闲聊二群</span>
+                  <span class='qdb-session__last'>（暂无新消息）</span>
+                </span>
+                <span class='qdb-session__time'>昨天</span>
+              </div>
+              <div class='qdb-session'>
+                <span class='qdb-session__avatar' aria-hidden='true'>档</span>
+                <span class='qdb-session__body'>
+                  <span class='qdb-session__name'>档案室</span>
+                  <span class='qdb-session__last'>已归档 22 个文件</span>
+                </span>
+                <span class='qdb-session__time'>昨天</span>
+              </div>
+            </div>
+          </div>
+
+          <div class='qdb-card' id='logs'>
+            <div class='qdb-card__head'>
+              <span class='qdb-card__title'>日志流</span>
+              <span class='qdb-row'><span class='qdb-dot qdb-dot--ok qdb-dot--live' aria-hidden='true'></span><span class='qdb-card__meta'>只读 · 最近 200 行</span></span>
+            </div>
+<pre class='qdb-log' aria-label='日志流示例'><span class='qdb-log__row'><span class='qdb-log__t'>02:41:07</span><span class='qdb-log__lv qdb-log__lv--ok'>OK  </span><span class='qdb-log__msg'>bridge ready pid=186640 port=3100</span></span>
+<span class='qdb-log__row'><span class='qdb-log__t'>02:41:09</span><span class='qdb-log__lv qdb-log__lv--info'>INFO</span><span class='qdb-log__msg'>gateway connected ws=open</span></span>
+<span class='qdb-log__row'><span class='qdb-log__t'>02:41:15</span><span class='qdb-log__lv qdb-log__lv--info'>INFO</span><span class='qdb-log__msg'>dsh ready model=default</span></span>
+<span class='qdb-log__row'><span class='qdb-log__t'>02:42:01</span><span class='qdb-log__lv qdb-log__lv--warn'>WARN</span><span class='qdb-log__msg'>stt fallback to cli, server 8791 not listening</span></span>
+<span class='qdb-log__row'><span class='qdb-log__t'>02:42:33</span><span class='qdb-log__lv qdb-log__lv--ok'>OK  </span><span class='qdb-log__msg'>reply sent group=*** len=42</span></span>
+<span class='qdb-log__row'><span class='qdb-log__t'>02:43:12</span><span class='qdb-log__lv qdb-log__lv--info'>INFO</span><span class='qdb-log__msg'>digest refreshed sessions=3</span></span>
+<span class='qdb-log__row'><span class='qdb-log__t'>02:44:58</span><span class='qdb-log__lv qdb-log__lv--err'>ERR </span><span class='qdb-log__msg'>upstream timeout after 30000ms, retry 1/2</span></span>
+<span class='qdb-log__row'><span class='qdb-log__t'>02:45:03</span><span class='qdb-log__lv qdb-log__lv--ok'>OK  </span><span class='qdb-log__msg'>retry succeeded in 4120ms</span></span></pre>
+          </div>
+        </div>
+      </section>
+
+      <footer class='qdb-section' id='system'>
+        <p class='qdb-section__desc'>
+          单文件样张：无 CDN、无远程字体、无外链图片；深浅色与 360 / 768 / 1280 三档都在本文件内自洽。
+          完整规范见 docs/ui-design-system.md。
+        </p>
+      </footer>
+    </main>
+  </div>
+</div>
+
+<div class='qdb-scrim' id='scrim' data-open='false'></div>
+<aside class='qdb-drawer' id='drawer' data-open='false' aria-hidden='true' aria-label='会话详情抽屉'>
+  <div class='qdb-drawer__head'>
+    <h2>会话详情</h2>
+    <button class='qdb-btn qdb-btn--ghost qdb-btn--sm' type='button' id='closeDrawer'>关闭</button>
+  </div>
+  <div class='qdb-field'>
+    <span class='qdb-field__label'>群号</span>
+    <p class='qdb-card__meta'><code>***</code>（样张脱敏）</p>
+  </div>
+  <div class='qdb-field'>
+    <span class='qdb-field__label'>当前唤醒配置</span>
+    <p class='qdb-card__meta'>潜水 · 被 @ 或叫名字时醒 · 合并窗口 3 秒</p>
+  </div>
+  <div class='qdb-field'>
+    <span class='qdb-field__label'>最近摘要</span>
+    <p class='qdb-card__meta'>3 小时前刷新，包含 12 条他人发言与 5 条本人回复。</p>
+  </div>
+  <div class='qdb-row'>
+    <button class='qdb-btn qdb-btn--primary' type='button'>保存</button>
+    <button class='qdb-btn qdb-btn--secondary' type='button' id='drawerCancel'>取消</button>
+  </div>
+</aside>
+
+<div class='qdb-toasts' id='toasts' aria-live='polite' aria-atomic='false'></div>
+
+<script>
+(function () {
+  'use strict';
+
+  // 品牌名只在 html[data-brand] 定义一次，这里读出来落到所有 [data-brand-text]
+  var brand = document.documentElement.dataset.brand || '';
+  document.querySelectorAll('[data-brand-text]').forEach(function (el) { el.textContent = brand; });
+
+  // ---- 主题：默认跟随系统，手动切换后记住 ----
+  // ---- 主题：默认浅色（粉白是本设计的主场），手动切换后记住 ----
+  var root = document.documentElement;
+  var toggle = document.getElementById('themeToggle');
+  var icon = document.getElementById('themeIcon');
+  var label = document.getElementById('themeLabel');
+  var STORE_KEY = 'qdb-theme';
+
+  function applyTheme(theme) {
+    root.setAttribute('data-theme', theme);
+    var dark = theme === 'dark';
+    if (toggle) toggle.setAttribute('aria-pressed', dark ? 'true' : 'false');
+    if (icon) icon.textContent = dark ? '☀' : '☾';
+    if (label) label.textContent = dark ? '浅色' : '深色';
+  }
+
+  // 不跟随系统深色：粉白是品牌主态，用户手动切过才用存的偏好
+  var saved = null;
+  try { saved = localStorage.getItem(STORE_KEY); } catch (e) { saved = null; }
+  applyTheme(saved === 'dark' ? 'dark' : 'light');
+
+  if (toggle) {
+    toggle.addEventListener('click', function () {
+      var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      applyTheme(next);
+      try { localStorage.setItem(STORE_KEY, next); } catch (e) { /* 隐私模式写不进去就用内存态 */ }
+    });
+  }
+
+  // ---- 视口宽度：给三档断点自测一个可见读数 ----
+  var vp = document.getElementById('vpWidth');
+  function paintWidth() { if (vp) vp.textContent = String(window.innerWidth); }
+  paintWidth();
+  window.addEventListener('resize', paintWidth);
+
+  // ---- 标签页：只切面板，不改 URL ----
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.qdb-tab'));
+  tabs.forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      tabs.forEach(function (t) {
+        var selected = t === tab;
+        t.setAttribute('aria-selected', selected ? 'true' : 'false');
+        var panel = document.getElementById(t.getAttribute('aria-controls'));
+        if (panel) panel.hidden = !selected;
+      });
+    });
+  });
+
+  // ---- 抽屉：Esc / 遮罩 / 按钮都能关 ----
+  var drawer = document.getElementById('drawer');
+  var scrim = document.getElementById('scrim');
+  var lastFocus = null;
+
+  function setDrawer(open) {
+    if (!drawer || !scrim) return;
+    drawer.dataset.open = open ? 'true' : 'false';
+    drawer.setAttribute('aria-hidden', open ? 'false' : 'true');
+    scrim.dataset.open = open ? 'true' : 'false';
+    if (open) {
+      lastFocus = document.activeElement;
+      var first = drawer.querySelector('button');
+      if (first) first.focus();
+    } else if (lastFocus && lastFocus.focus) {
+      lastFocus.focus();
+    }
+  }
+
+  var openBtn = document.getElementById('openDrawer');
+  var closeBtn = document.getElementById('closeDrawer');
+  var cancelBtn = document.getElementById('drawerCancel');
+  if (openBtn) openBtn.addEventListener('click', function () { setDrawer(true); });
+  if (closeBtn) closeBtn.addEventListener('click', function () { setDrawer(false); });
+  if (cancelBtn) cancelBtn.addEventListener('click', function () { setDrawer(false); });
+  if (scrim) scrim.addEventListener('click', function () { setDrawer(false); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && drawer && drawer.dataset.open === 'true') setDrawer(false);
+  });
+
+  // ---- toast：3 秒自动消失；prefers-reduced-motion 下不做入场动画 ----
+  var host = document.getElementById('toasts');
+  var toastBtn = document.getElementById('pushToast');
+  var seq = 0;
+  function pushToast() {
+    if (!host) return;
+    seq += 1;
+    var node = document.createElement('div');
+    node.className = 'qdb-toast qdb-toast--success';
+    node.setAttribute('role', 'status');
+    var body = document.createElement('div');
+    body.className = 'qdb-toast__body';
+    var title = document.createElement('div');
+    title.className = 'qdb-toast__title';
+    title.textContent = '已保存';
+    var msg = document.createElement('div');
+    msg.className = 'qdb-toast__msg';
+    msg.textContent = '第 ' + seq + ' 条示例通知，3 秒后自动消失。';
+    body.appendChild(title);
+    body.appendChild(msg);
+    node.appendChild(body);
+    host.appendChild(node);
+    setTimeout(function () { if (node.parentNode) node.parentNode.removeChild(node); }, 3000);
+  }
+  if (toastBtn) toastBtn.addEventListener('click', pushToast);
+})();
+</script>
+</body>
+</html>

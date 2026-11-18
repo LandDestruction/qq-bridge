@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<!-- 页面 URL 里带 ?token=…：加载 QQ 图床的外链图时，Referer 会把令牌带出去，所以一律不带 referer。 -->
+<meta name="referrer" content="no-referrer">
+<!-- 标题必须与页面里的 BRAND.name 一致（scripts/test-client-ui.mjs 会核对）：
+     首屏直接用静态文本，避免标签页先闪一下「无标题」。 -->
+<link rel="icon" type="image/webp" href="data:image/webp;base64,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">
+<title>QQ DeepSeek Bot</title>
+<script>
+  // 首屏不闪主题：必须留在 <head>、body 绘制之前。
+  // 取值优先级：上次手动选择（localStorage）→ 浅色（薄荷奶油）。
+  // 不再跟随系统深色：宿主机是深色模式时，面板也必须先给浅色（用户要的就是浅色系）。
+  (function () {
+    var theme = 'light';
+    try {
+      var saved = localStorage.getItem('qdb-theme');
+      if (saved === 'dark' || saved === 'light') theme = saved;
+    } catch (error) {
+      theme = 'light'; // 隐私模式/禁用存储：退回浅色，绝不因为读不到偏好就不渲染
+    }
+    document.documentElement.dataset.theme = theme;
+    // 界面方案（皮肤）与毛玻璃：同样在首屏前定下来，否则会先按默认皮肤画一帧再跳。
+    var skin = 'mint';
+    var glass = 'on';
+    var glassLevel = 'mid';
+    try {
+      var savedSkin = localStorage.getItem('qdb-skin');
+      if (savedSkin === 'mint' || savedSkin === 'paper' || savedSkin === 'peach' || savedSkin === 'pink') skin = savedSkin;
+      var savedGlass = localStorage.getItem('qdb-glass');
+      if (savedGlass === 'off' || savedGlass === 'on') glass = savedGlass;
+      var savedLevel = localStorage.getItem('qdb-glass-level');
+      if (savedLevel === 'light' || savedLevel === 'mid' || savedLevel === 'strong') glassLevel = savedLevel;
+    } catch (error) { /* 读不到就按默认：不影响渲染 */ }
+    document.documentElement.dataset.skin = skin;
+    document.documentElement.dataset.glass = glass;
+    document.documentElement.dataset.glassLevel = glassLevel;
+  })();
+</script>
+<link rel="stylesheet" href="/client.css">
+</head>
+<body>
+<div class="qdb-nav-mask" id="navMask" aria-hidden="true"></div>
+<div class="qdb-layout">
+  <aside class="qdb-sidebar" id="sidebar">
+    <div class="qdb-sidebar-brand">
+      <span class="qdb-logo" aria-hidden="true"><img alt="" width="32" height="32" src="data:image/webp;base64,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"></span>
+      <span id="brandSidebar">QQ DeepSeek Bot</span>
+    </div>
+    <nav class="qdb-nav" aria-label="主导航">
+      <button class="qdb-nav-item" type="button" data-view="dashboard" aria-current="page">
+        <span class="qdb-nav-icon" aria-hidden="true">▤</span>仪表盘
+      </button>
+      <button class="qdb-nav-item" type="button" data-view="framework">
+        <span class="qdb-nav-icon" aria-hidden="true">◈</span>架构
+      </button>
+      <button class="qdb-nav-item" type="button" data-view="sessions">
+        <span class="qdb-nav-icon" aria-hidden="true">☰</span>会话
+      </button>
+      <button class="qdb-nav-item" type="button" data-view="persona">
+        <span class="qdb-nav-icon" aria-hidden="true">☺</span>人设
+      </button>
+      <button class="qdb-nav-item" type="button" data-view="memory">
+        <span class="qdb-nav-icon" aria-hidden="true">❏</span>记忆
+      </button>
+      <button class="qdb-nav-item" type="button" data-view="slang">
+        <span class="qdb-nav-icon" aria-hidden="true">❝</span>黑话
+      </button>
+      <button class="qdb-nav-item" type="button" data-view="stickers">
+        <span class="qdb-nav-icon" aria-hidden="true">☻</span>表情
+      </button>
+      <button class="qdb-nav-item" type="button" data-view="library-pro">
+        <span class="qdb-nav-icon" aria-hidden="true">◫</span>素材库
+      </button>
+      <button class="qdb-nav-item" type="button" data-view="library">
+        <span class="qdb-nav-icon" aria-hidden="true">▣</span>转存与存储
+      </button>
+      <button class="qdb-nav-item" type="button" data-view="lists">
+        <span class="qdb-nav-icon" aria-hidden="true">⊘</span>名单
+      </button>
+      <button class="qdb-nav-item" type="button" data-view="routing">
+        <span class="qdb-nav-icon" aria-hidden="true">⇄</span>模型与高峰
+      </button>
+      <button class="qdb-nav-item" type="button" data-view="logs">
+        <span class="qdb-nav-icon" aria-hidden="true">≡</span>日志
+      </button>
+      <button class="qdb-nav-item" type="button" data-view="usage">
+        <span class="qdb-nav-icon" aria-hidden="true">◷</span>用量与花费
+      </button>
+      <button class="qdb-nav-item" type="button" data-view="ops">
+        <span class="qdb-nav-icon" aria-hidden="true">⚒</span>运维
+      </button>
+      <button class="qdb-nav-item" type="button" data-view="settings">
+        <span class="qdb-nav-icon" aria-hidden="true">⚙</span>设置
+      </button>
+    </nav>
+    <div class="qdb-sidebar-foot">v2 外壳 · 读 + 写</div>
+  </aside>
+
+  <div class="qdb-shell">
+    <header class="qdb-topbar">
+      <button class="qdb-hamburger" id="hamburger" type="button" aria-label="打开导航" aria-expanded="false">☰</button>
+      <span class="qdb-topbar-title" id="brandTopbar">QQ DeepSeek Bot</span>
+      <div class="qdb-topbar-meta">
+        <span class="qdb-chip" id="connChip" title="桥接 / DSH / SnowLuma 连接状态">
+          <span class="qdb-dot" id="connDot" data-level="idle"></span><span id="connText">连接状态读取中</span>
+        </span>
+        <span class="qdb-chip" id="qqChip" title="机器人 QQ 号">QQ —</span>
+        <span class="qdb-chip" id="versionChip" title="桥接版本">版本 —</span>
+        <!-- 隐藏入口的「你已解锁」小提示：不用弹窗，只在右上挂一个 chip（未解锁时 hidden）。 -->
+        <span class="qdb-chip qdb-tool-chip" id="devChip" hidden title="调试入口已解锁：工具开关已出现在导航里">调试</span>
+      </div>
+      <!-- 深浅色按钮放在 meta 外：窄屏时它要留在品牌那一行，chips 单独占一行，
+           否则 360 宽下它会孤零零掉到第三行（T24 修的就是这个）。 -->
+      <button class="qdb-icon-btn qdb-topbar-theme" id="themeToggle" type="button" aria-pressed="false" aria-label="切换深浅色">深色</button>
+    </header>
+
+    <div class="qdb-offline" id="bridgeOffline" hidden role="status" aria-live="polite">
+      <span class="qdb-offline-dot" aria-hidden="true"></span>
+      <b>机器人已下线</b>
+      <span id="bridgeOfflineText">桥接 3100 没响应；面板还在，每 3 秒自动重试。</span>
+      <button class="qdb-btn qdb-btn-mini" type="button" id="bridgeRetry">立刻重试</button>
+    </div>
+
+    <div class="qdb-offline qdb-identity-lock" id="identityLockBar" hidden role="alert" aria-live="assertive">
+      <span class="qdb-offline-dot" aria-hidden="true"></span>
+      <b>身份锁已锁定</b>
+      <span id="identityLockText">当前登录的 QQ 不在允许名单里，所有消息都不会发出。</span>
+    </div>
+
+    <div class="qdb-offline qdb-stale-build" id="staleBuildBar" hidden role="status" aria-live="polite">
+      <span class="qdb-offline-dot" aria-hidden="true"></span>
+      <b>控制台有新版本</b>
+      <span id="staleBuildText">这个页面还是旧版本，表情库、用量等数据可能和另一台设备对不上。</span>
+      <button class="qdb-btn qdb-btn-mini" type="button" id="staleBuildReload">刷新</button>
+    </div>
+
+    <main class="qdb-main">
+      <section data-page="dashboard">
+        <h1 class="qdb-page-title">仪表盘</h1>
+        <p class="qdb-page-sub">数据全部来自本机 3100 服务的只读接口；每张卡片独立加载，单张失败不影响其它卡片。</p>
+        <!-- 数据环：只在「数据环 HUD」那套皮肤下显示（client/09-ring.js 负责画，切走皮肤就停） -->
+        <div class="qdb-hero" id="qdbHero" hidden>
+          <canvas class="qdb-hero-canvas" id="qdbRing" aria-hidden="true"></canvas>
+          <div class="qdb-hero-labels" aria-hidden="true">
+            <span class="qdb-hero-tag">HALOFLUX</span>
+            <span class="qdb-hero-note">ring / beams / mesh · 视觉语言致敬 Ryder191，非商业使用</span>
+          </div>
+        </div>
+        <div class="qdb-grid">
+          <article class="qdb-card" id="card-status" tabindex="0" role="button" aria-label="运行状态：查看完整数据">
+            <div class="qdb-card-head"><span class="qdb-card-title">运行状态</span><span class="qdb-card-state" data-state>加载中</span><span class="qdb-card-more">详情 ›</span></div>
+            <div class="qdb-card-body" data-body></div>
+            <div class="qdb-card-foot"><button class="qdb-btn" type="button" data-retry="status">刷新</button><span data-updated></span></div>
+          </article>
+          <article class="qdb-card" id="card-services" tabindex="0" role="button" aria-label="服务健康：查看完整数据">
+            <div class="qdb-card-head"><span class="qdb-card-title">服务健康</span><span class="qdb-card-state" data-state>加载中</span><span class="qdb-card-more">详情 ›</span></div>
+            <div class="qdb-card-body" data-body></div>
+            <div class="qdb-card-foot"><button class="qdb-btn" type="button" data-retry="services">刷新</button><span data-updated></span></div>
+          </article>
+          <article class="qdb-card" id="card-wb2api" tabindex="0" role="button" aria-label="WorkBuddy2API：点击打开它的面板">
+            <div class="qdb-card-head"><span class="qdb-card-title">WorkBuddy2API</span><span class="qdb-card-state" data-state>加载中</span><span class="qdb-card-more">详情 ›</span></div>
+            <div class="qdb-card-body" data-body></div>
+            <div class="qdb-card-foot"><button class="qdb-btn" type="button" data-retry="wb2api">刷新</button><span data-updated></span></div>
+          </article>
+          <article class="qdb-card" id="card-snowluma" tabindex="0" role="button" aria-label="SnowLuma：点击打开它的面板">
+            <div class="qdb-card-head"><span class="qdb-card-title">SnowLuma</span><span class="qdb-card-state" data-state>加载中</span><span class="qdb-card-more">详情 ›</span></div>
+            <div class="qdb-card-body" data-body></div>
+            <div class="qdb-card-foot"><button class="qdb-btn" type="button" data-retry="snowluma">刷新</button><span data-updated></span></div>
+          </article>
+          <article class="qdb-card" id="card-selfcheck" tabindex="0" role="button" aria-label="自检：查看完整数据">
+            <div class="qdb-card-head"><span class="qdb-card-title">自检</span><span class="qdb-card-state" data-state>加载中</span><span class="qdb-card-more">详情 ›</span></div>
+            <div class="qdb-card-body" data-body></div>
+            <div class="qdb-card-foot"><button class="qdb-btn" type="button" data-retry="selfcheck">刷新</button><span data-updated></span></div>
+          </article>
+          <article class="qdb-card" id="card-tokens" tabindex="0" role="button" aria-label="用量与花费：查看完整数据">
+            <div class="qdb-card-head"><span class="qdb-card-title">用量与花费</span><span class="qdb-card-state" data-state>加载中</span><span class="qdb-card-more">详情 ›</span></div>
+            <div class="qdb-card-body" data-body></div>
+            <div class="qdb-card-foot"><button class="qdb-btn" type="button" data-retry="tokens">刷新</button><span data-updated></span></div>
+          </article>
+          <article class="qdb-card" id="card-sessions" tabindex="0" role="button" aria-label="会话：查看完整数据">
+            <div class="qdb-card-head"><span class="qdb-card-title">会话</span><span class="qdb-card-state" data-state>加载中</span><span class="qdb-card-more">详情 ›</span></div>
+            <div class="qdb-card-body" data-body></div>
+            <div class="qdb-card-foot"><button class="qdb-btn" type="button" data-retry="sessions">刷新</button><span data-updated></span></div>
+          </article>
+          <article class="qdb-card" id="card-lists" tabindex="0" role="button" aria-label="名单：查看完整数据">
+            <div class="qdb-card-head"><span class="qdb-card-title">名单</span><span class="qdb-card-state" data-state>加载中</span><span class="qdb-card-more">详情 ›</span></div>
+            <div class="qdb-card-body" data-body></div>
+            <div class="qdb-card-foot"><button class="qdb-btn" type="button" data-retry="lists">刷新</button><span data-updated></span></div>
+          </article>
+        </div>
+      </section>
+
+      <section data-page="sessions" hidden>
+        <div class="qdb-page-head">
+          <h1 class="qdb-page-title">会话</h1>
+          <span class="qdb-badge" data-tone="write">可操作</span>
+          <button class="qdb-btn qdb-page-refresh" type="button" data-page-refresh="sessions">刷新</button>
+        </div>
+        <p class="qdb-page-sub">来自 GET /api/sessions 与 /api/socialV2/states；点一行看最近消息，可对选中的会话执行重置。重置会清掉在途回合与会话表，下次群消息到达时重建。</p>
+        <div class="qdb-page-body" id="page-sessions"></div>
+      </section>
+      <section data-page="persona" hidden>
+        <div class="qdb-page-head">
+          <h1 class="qdb-page-title">人设</h1>
+          <span class="qdb-badge" data-tone="write">可操作</span>
+          <button class="qdb-btn qdb-page-refresh" type="button" data-page-refresh="persona">刷新</button>
+        </div>
+        <p class="qdb-page-sub">来自 GET /api/roles 与 /api/roles/content；可切换当前角色、改正文、新建角色卡、改名、删除。改正文会整篇覆盖所选角色的内容（旧内容不可找回），删除角色文件同样不可撤销，删掉当前角色会让桥接回到默认人格。</p>
+        <div class="qdb-page-body" id="page-persona"></div>
+      </section>
+      <section data-page="memory" hidden>
+        <div class="qdb-page-head">
+          <h1 class="qdb-page-title">记忆</h1>
+          <span class="qdb-badge" data-tone="write">可操作</span>
+          <button class="qdb-btn qdb-page-refresh" type="button" data-page-refresh="memory">刷新</button>
+        </div>
+        <p class="qdb-page-sub">总览来自 GET /api/memory/overview（跨会话群友印象、共享事件、每会话条数），单会话详情来自 GET /api/socialV2/memory?key=。话题 / 未说出口的话 / 群友印象可单条删除或整类清空，不可撤销，但只影响当前会话。</p>
+        <div class="qdb-page-body" id="page-memory"></div>
+      </section>
+      <section data-page="slang" hidden>
+        <div class="qdb-page-head">
+          <h1 class="qdb-page-title">黑话库</h1>
+          <span class="qdb-badge" data-tone="write">可操作</span>
+          <button class="qdb-btn qdb-page-refresh" type="button" data-page-refresh="slang">刷新</button>
+        </div>
+        <p class="qdb-page-sub">数据流：群聊自动提取 + AI 用 qq_slang_submit 提交 → 人工确认（先填含义）→ 写进黑话提示词、注入 AI 上下文。来源 GET /api/slang（写接口 PATCH / POST / DELETE /api/slang…）；「升为可用」只有人能点——词条先经确认，再决定是「可用」还是「仅听懂」。删除 / 清空 / 批量删除都不可撤销。</p>
+        <div class="qdb-page-body" id="page-slang"></div>
+      </section>
+      <section data-page="stickers" hidden>
+        <div class="qdb-page-head">
+          <h1 class="qdb-page-title">表情</h1>
+          <span class="qdb-badge" data-tone="write">可操作</span>
+          <button class="qdb-btn qdb-page-refresh" type="button" data-page-refresh="stickers">刷新</button>
+        </div>
+        <p class="qdb-page-sub">来自 GET /api/stickers；可写备注、切换「可用 / 只解读」策略、删除、同步收藏、检查修复。删除收藏表情不可撤销（可再从 QQ 客户端收藏）。</p>
+        <div class="qdb-page-body" id="page-stickers"></div>
+      </section>
+      <section data-page="library-pro" hidden>
+        <div class="qdb-page-head">
+          <h1 class="qdb-page-title">素材库</h1>
+          <span class="qdb-badge" data-tone="write">可操作</span>
+          <button class="qdb-btn qdb-page-refresh" type="button" data-page-refresh="library-pro">刷新</button>
+        </div>
+        <p class="qdb-page-sub">按分类、店铺、来源、标签挑素材；点封面看详情，卡片上可直接找号、改名、补封面。</p>
+        <div class="qdb-page-body" id="page-library-pro"></div>
+      </section>
+      <section data-page="library" hidden>
+        <div class="qdb-page-head">
+          <h1 class="qdb-page-title">转存与存储</h1>
+          <span class="qdb-badge" data-tone="write">可操作</span>
+          <button class="qdb-btn qdb-page-refresh" type="button" data-page-refresh="library">刷新</button>
+        </div>
+        <p class="qdb-page-sub">转存条件、在电脑上的文件夹、清理与磁盘余量都在这里；素材的浏览 / 找号 / 补封面 / 合并 / 下载都搬到「素材库」页。</p>
+        <div class="qdb-page-body" id="page-library"></div>
+      </section>
+            <section data-page="lists" hidden>
+        <div class="qdb-page-head">
+          <h1 class="qdb-page-title">名单</h1>
+          <span class="qdb-badge" data-tone="write">可操作</span>
+          <button class="qdb-btn qdb-page-refresh" type="button" data-page-refresh="lists">刷新</button>
+        </div>
+        <p class="qdb-page-sub">来自 GET /api/lists；白名单 / 拒绝 / 观察 / 归档 / AI 黑名单都在这页改，写回 config.json 前会二次确认并备份。拒绝名单优先于白名单。</p>
+        <div class="qdb-page-body" id="page-lists"></div>
+      </section>
+      <section data-page="routing" hidden>
+        <div class="qdb-page-head">
+          <h1 class="qdb-page-title">模型与高峰</h1>
+          <span class="qdb-badge" data-tone="write">可操作</span>
+          <button class="qdb-btn qdb-page-refresh" type="button" data-page-refresh="routing">刷新</button>
+        </div>
+        <p class="qdb-page-sub">空闲/高峰模型、降级链、禁用清单与暂停聊天；写操作先二次确认，保存后下一轮生效。</p>
+        <div class="qdb-page-body" id="page-routing"></div>
+      </section>
+      <section data-page="usage" hidden>
+        <div class="qdb-page-head">
+          <h1 class="qdb-page-title">用量与花费</h1>
+          <span class="qdb-badge" data-tone="muted">只读 + 重置</span>
+          <button class="qdb-btn qdb-page-refresh" type="button" data-page-refresh="usage">刷新</button>
+        </div>
+        <p class="qdb-page-sub">总账、花费走势、各会话花费与逐轮明细来自 GET /api/tokens/*；「重置账本」只清零统计，不动任何消息数据。</p>
+        <div class="qdb-page-body" id="page-usage"></div>
+      </section>
+      <section data-page="framework" hidden>
+        <div class="qdb-page-head">
+          <h1 class="qdb-page-title">系统架构</h1>
+          <button class="qdb-btn qdb-page-refresh" type="button" data-page-refresh="framework">刷新</button>
+        </div>
+        <p class="qdb-page-sub">一张图看懂：消息从哪个群进来、经过桥接的哪几层、最后被哪个模型回出去，以及省 token 的三个闸。数据来自 GET /api/ops/services、GET /api/status、GET /api/tokens/summary 与「模型与高峰」页那份 GET /api/model-routing，不新增接口。</p>
+        <div class="qdb-page-body" id="page-framework"></div>
+      </section>
+      <section data-page="logs" hidden>
+        <div class="qdb-page-head">
+          <h1 class="qdb-page-title">日志</h1>
+          <span class="qdb-badge" data-tone="write">可清空</span>
+          <button class="qdb-btn qdb-page-refresh" type="button" data-page-refresh="logs">刷新</button>
+        </div>
+        <p class="qdb-page-sub">按聊天流看：群友说话靠左、机器人说话靠右，机器人的系统动作（等消息 / 调工具 / 改配置）也靠左，用灰色虚线气泡标出来（点「原始参数」看当时的入参）。打开就在最新一条。服务日志在「运维」。</p>
+        <div class="qdb-page-body" id="page-logs"></div>
+      </section>
+      <section data-page="ops" hidden>
+        <div class="qdb-page-head">
+          <h1 class="qdb-page-title">运维</h1>
+          <span class="qdb-badge" data-tone="write">可操作</span>
+          <button class="qdb-btn qdb-page-refresh" type="button" data-page-refresh="ops">刷新</button>
+        </div>
+        <p class="qdb-page-sub">来自 GET /api/ops/services、GET /api/ops/status 与 GET /api/self-check/last；启停走 POST /api/ops/action（二次确认后才发），自检走 POST /api/self-check（只读体检，不改配置）。</p>
+        <div class="qdb-page-body" id="page-ops"></div>
+      </section>
+      <section data-page="settings" hidden>
+        <div class="qdb-page-head">
+          <h1 class="qdb-page-title">设置</h1>
+          <span class="qdb-badge" data-tone="write">可操作</span>
+          <button class="qdb-btn qdb-page-refresh" type="button" data-page-refresh="settings">刷新</button>
+        </div>
+        <p class="qdb-page-sub">外观在这里调；写配置会直接落到线上 config.json，保存前会二次确认，端口 / 白名单 / 连接类键要重启桥接才生效。</p>
+        <div class="qdb-page-body" id="page-settings"></div>
+      </section>
+      <section data-page="toolgate" hidden>
+        <div class="qdb-page-head">
+          <h1 class="qdb-page-title">工具开关</h1>
+          <span class="qdb-badge" data-tone="write">可操作</span>
+          <button class="qdb-btn qdb-page-refresh" type="button" data-page-refresh="toolgate">刷新</button>
+        </div>
+        <p class="qdb-page-sub">来自 GET / POST /api/tools/gate：逐个开关机器人能调用的工具。这是隐藏页——设置页连点版本号 5 次，或用带 ?dev=1 的地址打开本页。</p>
+        <div class="qdb-page-body" id="page-toolgate"></div>
+      </section>
+    </main>
+
+    <footer class="qdb-footer">
+      <span id="brandFooter">QQ DeepSeek Bot</span> · 外壳 v2 ·
+      <span id="footerNote">非腾讯 / 非 DeepSeek 官方产品（Not affiliated with Tencent or DeepSeek）</span>
+    </footer>
+  </div>
+</div>
+
+<div class="qdb-toast-host" id="toastHost" aria-live="polite"></div>
+
+<!-- 更新日志：scripts/make-changelog.mjs 从 git log 生成的静态数据，只在设置页点开时读取 -->
+<script src="/changelog.js" defer></script>
+<script src="/client.js" defer></script>
+</body>
+</html>

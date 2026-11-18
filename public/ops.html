@@ -1,0 +1,1431 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>运维面板 · qq-bridge</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root { color-scheme: dark; --bg:#0f1115; --card:#171a21; --line:#262b36; --text:#e6e9ef; --dim:#8b93a3; --ok:#3ddc84; --bad:#ff5d5d; --warn:#ffb020; }
+  * { box-sizing: border-box; }
+  /* 键盘焦点可见：只加不减，不要用 outline 归零把默认焦点环干掉 */
+  :focus-visible { outline:2px solid #5aa9ff; outline-offset:2px; }
+  body { margin:0; background:var(--bg); color:var(--text); font:14px/1.6 "Segoe UI", "Microsoft YaHei", sans-serif; }
+  header { padding:18px 22px; border-bottom:1px solid var(--line); display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; }
+  h1 { font-size:18px; margin:0; font-weight:600; }
+  .dim { color:var(--dim); font-size:12px; }
+  main { padding:18px 22px; display:grid; gap:14px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px 16px; }
+  .card h2 { margin:0 0 10px; font-size:14px; font-weight:600; display:flex; align-items:center; gap:8px; }
+  .dot { width:9px; height:9px; border-radius:50%; background:var(--dim); display:inline-block; }
+  .dot.ok { background:var(--ok); box-shadow:0 0 8px var(--ok); }
+  .dot.bad { background:var(--bad); box-shadow:0 0 8px var(--bad); }
+  dl { margin:0; display:grid; grid-template-columns:auto 1fr; gap:4px 12px; }
+  dt { color:var(--dim); white-space:nowrap; }
+  dd { margin:0; word-break:break-all; font-variant-numeric: tabular-nums; }
+  .wide { grid-column: 1 / -1; }
+  pre { margin:0; max-height:340px; overflow:auto; background:#0b0d11; border:1px solid var(--line); border-radius:8px; padding:10px 12px; font:12px/1.55 Consolas, monospace; color:#cfd6e4; }
+  a { color:#7ab7ff; }
+  .slang-row { cursor: pointer; border-left: 3px solid transparent; padding-left: 6px !important; }
+  .slang-row:hover { background: #161b24; }
+  .slang-row.sel { background: #1f2b3d !important; border-left-color: #4d9fff; }
+  .slang-row.sel .slang-word { color: #7ab7ff; }
+  /* toast（与 console.html 同一套观感）：成功/信息 3.5 秒消失，失败必须手动关 */
+  .toast-host { position:fixed; right:18px; bottom:18px; z-index:9999; display:flex; flex-direction:column; gap:8px; max-width:min(420px, calc(100vw - 36px)); }
+  .toast { display:flex; align-items:flex-start; gap:10px; padding:10px 12px; border-radius:10px; border:1px solid var(--line); border-left-width:4px; background:var(--card); color:var(--text); font-size:13px; line-height:1.5; box-shadow:0 8px 24px rgba(0,0,0,.35); }
+  .toast-text { flex:1 1 auto; overflow-wrap:anywhere; }
+  .toast-ok { border-left-color:var(--ok); }
+  .toast-err { border-left-color:var(--bad); }
+  .toast-info { border-left-color:#4d9fff; }
+  .toast-close { flex:0 0 auto; width:22px; height:22px; padding:0; border:0; border-radius:6px; background:transparent; color:var(--dim); font-size:16px; line-height:1; cursor:pointer; }
+  .toast-close:hover { background:#1d222c; color:var(--text); }
+  @media (max-width: 768px) {
+    .toast-host { left:12px; right:12px; bottom:12px; max-width:none; }
+    /* 窄屏：表格横向滚动而不是把列挤成一团；工具条换行不重叠 */
+    .card { overflow-x:auto; }
+    .card table { min-width:560px; }
+    header { padding:12px 14px; }
+  }
+</style>
+</head>
+<body>
+<div id="toastHost" class="toast-host" aria-live="polite"></div>
+<header>
+  <h1>运维面板</h1>
+  <span class="dim">复用 bridge 控制台（3100）· 只读视图 · 每 2 秒刷新</span>
+  <span class="dim" id="stamp"></span>
+</header>
+<main>
+  <section class="card">
+    <h2><span class="dot" id="dot-bridge"></span>bridge</h2>
+    <dl>
+      <dt>PID</dt><dd id="bridge-pid">—</dd>
+      <dt>运行时长</dt><dd id="bridge-uptime">—</dd>
+      <dt>模式</dt><dd id="bridge-mode">—</dd>
+      <dt>端口</dt><dd id="bridge-port">—</dd>
+      <dt>DSH 会话</dt><dd id="bridge-sessions">—</dd>
+      <dt>QQ 会话</dt><dd id="bridge-convs">—</dd>
+    </dl>
+  </section>
+
+  <section class="card">
+    <h2><span class="dot" id="dot-dsh"></span>DSH</h2>
+    <dl>
+      <dt>地址</dt><dd id="dsh-url">—</dd>
+      <dt>探活</dt><dd id="dsh-probe">—</dd>
+      <dt>耗时</dt><dd id="dsh-ms">—</dd>
+    </dl>
+  </section>
+
+  <section class="card">
+    <h2><span class="dot" id="dot-snow"></span>SnowLuma</h2>
+    <dl>
+      <dt>地址</dt><dd id="snow-url">—</dd>
+      <dt>QQ 账号</dt><dd id="snow-nick">—</dd>
+      <dt>探活</dt><dd id="snow-probe">—</dd>
+    </dl>
+  </section>
+
+  <section class="card wide">
+    <h2>最近日志（state/bridge.log 尾部）</h2>
+    <pre id="log">加载中…</pre>
+  </section>
+
+  <section class="card wide">
+    <h2>服务状态（启停走计划任务；DSH 只显示）</h2>
+    <table id="svc-table" style="width:100%;border-collapse:collapse">
+      <thead>
+        <tr style="text-align:left;color:var(--dim);font-size:12px">
+          <th style="padding:6px 8px">服务</th><th style="padding:6px 8px">状态</th>
+          <th style="padding:6px 8px">详情</th><th style="padding:6px 8px">守护方式</th><th style="padding:6px 8px">操作</th>
+        </tr>
+      </thead>
+      <tbody id="svc-body"><tr><td colspan="5" class="dim" style="padding:8px">加载中…</td></tr></tbody>
+    </table>
+    <div class="dim" id="svc-msg" style="margin-top:8px"></div>
+  </section>
+
+  <section class="card wide">
+    <h2>机器人自检（九组）</h2>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap">
+      <button id="selfcheck-run" style="padding:6px 14px;border-radius:6px;border:1px solid var(--line);background:#151a22;color:var(--text);cursor:pointer">运行自检</button>
+      <span class="dim" id="selfcheck-msg" style="font-size:12px">端口 / 网关 / DSH / 桥接 / 存储 / 配置 / 计划任务 / 磁盘日志 / 版本，一次查完（只读，约 5–10 秒）</span>
+    </div>
+    <div id="selfcheck-summary" class="dim" style="font-size:12px;margin-bottom:8px"></div>
+    <div id="selfcheck-groups" class="dim" style="font-size:12px">还没有自检记录；点上面的按钮跑一次。</div>
+  </section>
+
+  <section class="card wide">
+    <h2>黑话库升权（「听懂」→「可以用」）</h2>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap">
+      <input id="slang-filter" placeholder="按词筛选…" style="padding:5px 9px;border-radius:6px;border:1px solid var(--line);background:#0b0d11;color:var(--text);font-size:12px;width:180px" />
+      <label class="dim" style="font-size:12px"><input type="checkbox" id="slang-only-listen" checked /> 只看「听懂」档</label>
+      <span class="dim" id="slang-count" style="font-size:12px"></span>
+    </div>
+    <div id="slang-list" style="max-height:300px;overflow:auto"></div>
+    <div class="dim" id="slang-msg" style="margin-top:6px"></div>
+  </section>
+
+  <section class="card wide" id="sticker-panel">
+    <h2>表情包注释（不注释就不能发）</h2>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap">
+      <select id="sticker-filter" style="padding:4px 8px;border-radius:6px;border:1px solid var(--line);background:#0b0d11;color:var(--text);font-size:12px">
+  <option value="all">全部表情</option>
+  <option value="nolabel">只看未注释</option>
+  <option value="usable">只看可发</option>
+  <option value="unusable">只看不可发</option>
+          <option value="broken">只看失效（缩略图不可用）</option>
+</select>
+      <select id="sticker-sort" style="padding:4px 8px;border-radius:6px;border:1px solid var(--line);background:#0b0d11;color:var(--text);font-size:12px">
+  <option value="new">最新获取在前</option>
+  <option value="old">最早获取在前</option>
+</select>
+<span class="dim" id="sticker-count" style="font-size:12px"></span>
+<span style="margin-left:auto;display:flex;gap:6px;align-items:center">
+  <button id="sticker-prev" style="padding:3px 10px;border-radius:6px;border:1px solid var(--line);background:#1d222c;color:var(--text);cursor:pointer;font-size:12px">上一页</button>
+  <span class="dim" id="sticker-page" style="font-size:12px"></span>
+  <button id="sticker-next" style="padding:3px 10px;border-radius:6px;border:1px solid var(--line);background:#1d222c;color:var(--text);cursor:pointer;font-size:12px">下一页</button>
+</span>
+      <button id="sticker-dedupe" style="padding:3px 10px;border-radius:6px;border:1px solid var(--line);background:#1d222c;color:var(--text);cursor:pointer;font-size:12px">合并重复</button>
+      <button id="sticker-repair-all" style="padding:3px 10px;border-radius:6px;border:1px solid var(--line);background:#1d222c;color:var(--text);cursor:pointer;font-size:12px">批量重新拉取</button>
+      <span class="dim" id="sticker-msg" style="font-size:12px" aria-live="polite"></span>
+    </div>
+    <div id="sticker-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;max-height:460px;overflow:auto"></div>
+  </section>
+
+  <section class="card wide" id="routing-card">
+    <h2>高峰期与模型</h2>
+    <div class="dim" id="routing-note" style="font-size:12px;margin-bottom:8px">修改先在本地暂存，点「保存」一次性提交；下一轮生效，无需重启。</div>
+    <div class="dim" id="routing-error" style="font-size:12px;color:#ff9d9d"></div>
+    <div class="dim" id="routing-warn" style="font-size:12px;color:#ffcf8a" hidden></div>
+    <div id="routing-body">
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:4px 0">
+        <label style="font-weight:600"><input type="checkbox" id="routing-peak-enabled"> 启用高峰期</label>
+        <span class="dim" id="routing-window" style="font-size:12px"></span>
+      </div>
+      <h3 style="margin:14px 0 6px;font-size:13px">空闲期模型</h3>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <select id="routing-idle" style="max-width:360px;padding:4px 8px;border-radius:6px;border:1px solid var(--line);background:#0b0d11;color:var(--text);font-size:12px"></select>
+        <span class="dim">当前：<code id="routing-idle-cur">—</code></span>
+      </div>
+      <h3 style="margin:14px 0 6px;font-size:13px">高峰期模型</h3>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <select id="routing-peak" style="max-width:360px;padding:4px 8px;border-radius:6px;border:1px solid var(--line);background:#0b0d11;color:var(--text);font-size:12px"></select>
+        <span class="dim">当前：<code id="routing-peak-cur">—</code></span>
+      </div>
+      <h3 style="margin:14px 0 6px;font-size:13px">降级候选（有序，最多 5 个）</h3>
+      <ol id="routing-fallback" style="margin:0;padding-left:18px;font-size:12px"></ol>
+      <button id="routing-fallback-add" type="button" style="margin-top:6px;padding:3px 10px;border-radius:5px;border:1px solid var(--line);background:#161b24;color:var(--text);cursor:pointer;font-size:12px">添加降级候选</button>
+      <h3 style="margin:14px 0 6px;font-size:13px">禁用项（选择 / 降级时跳过）</h3>
+      <ul id="routing-disabled" style="margin:0;padding-left:18px;font-size:12px"></ul>
+      <button id="routing-disabled-add" type="button" style="margin-top:6px;padding:3px 10px;border-radius:5px;border:1px solid var(--line);background:#161b24;color:var(--text);cursor:pointer;font-size:12px">添加禁用项</button>
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:16px">
+        <button id="routing-save" type="button" style="padding:5px 18px;border-radius:6px;border:1px solid var(--line);background:#1d222c;color:var(--text);cursor:pointer;font-size:13px">保存</button>
+        <span id="routing-msg" style="font-size:12px"></span>
+        <span class="dim" id="routing-dirty" style="font-size:12px"></span>
+      </div>
+      <div class="dim" id="routing-effective" style="font-size:12px;margin-top:10px">当前实际使用：—</div>
+      <div class="dim" id="routing-stats" style="font-size:12px;margin-top:4px"></div>
+    </div>
+  </section>
+  <section class="card wide" id="ai-blacklist-card">
+    <h2>AI 黑名单（别跟别的 AI 接成永动机）</h2>
+    <div class="dim" style="font-size:12px;margin-bottom:8px">登记要限制的 AI QQ：<b>reduce</b>=非 @ 类唤醒不触发（消息照常进上下文）；<b>silent</b>=连 @ 都不回。改完立即热加载，无需重启。<br>也可以管理员 QQ 直接私聊机器人发 <b>/aiban</b> 远程管理（/aiban 123456789 加、/aiban del、/aiban list、/aiban on|off、/aiban mode reduce|silent）。</div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <label style="font-weight:600"><input type="checkbox" id="aibl-enabled"> 启用</label>
+      <input id="aibl-qq" placeholder="AI 的 QQ 号（5~13 位数字）" style="padding:5px 9px;border-radius:6px;border:1px solid var(--line);background:#0b0d11;color:var(--text);font-size:12px;width:190px" />
+      <input id="aibl-note" placeholder="备注（可选，≤40 字）" style="padding:5px 9px;border-radius:6px;border:1px solid var(--line);background:#0b0d11;color:var(--text);font-size:12px;width:190px" />
+      <button id="aibl-add" style="padding:5px 12px;border-radius:6px;border:1px solid var(--line);background:#1d222c;color:var(--text);cursor:pointer;font-size:12px">添加</button>
+      <button id="aibl-refresh" style="padding:5px 12px;border-radius:6px;border:1px solid var(--line);background:#1d222c;color:var(--text);cursor:pointer;font-size:12px">刷新</button>
+      <span class="dim" id="aibl-stats" style="font-size:12px"></span>
+    </div>
+    <div id="aibl-list" style="margin-top:8px"></div>
+    <div class="dim" id="aibl-msg" style="margin-top:6px;font-size:12px"></div>
+  </section>
+</main>
+<script>
+const token = new URLSearchParams(location.search).get('token') || '';
+
+function setText(id, text) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = text == null || text === '' ? '—' : String(text);
+}
+function setDot(id, ok) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.className = 'dot ' + (ok ? 'ok' : 'bad');
+}
+// 与服务端/群聊来的文本拼进 innerHTML 前必须转义：黑话词条、服务名等
+// 都是群友/AI 可控内容，未转义即为存储型 XSS（脚本能读到 location.search 里的 token）。
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+// 失败必须可见：加载失败时把错误写在数据位置本身，让「失败」与「真的空」能区分开。
+function opsMsgError(msgId, title, error) {
+  const el = document.getElementById(msgId);
+  if (!el) return;
+  el.textContent = '⚠️ ' + title + '：' + (error && error.message ? error.message : String(error));
+  el.style.color = '#ff9d9d';
+  el.style.fontWeight = '600';
+  el.dataset.err = '1';
+}
+function opsClearMsgError(msgId) {
+  const el = document.getElementById(msgId);
+  if (!el || el.dataset.err !== '1') return;
+  el.textContent = '';
+  el.style.color = '';
+  el.style.fontWeight = '400';
+  delete el.dataset.err;
+}
+function opsGridError(gridId, title, error) {
+  const box = document.getElementById(gridId);
+  if (!box) return;
+  box.innerHTML = '';
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'padding:10px;color:#ff9d9d;font-size:12px;line-height:1.6';
+  const t = document.createElement('div');
+  t.style.fontWeight = '600';
+  t.textContent = '⚠️ ' + title;
+  const d = document.createElement('div');
+  d.textContent = error && error.message ? error.message : String(error);
+  wrap.appendChild(t);
+  wrap.appendChild(d);
+  box.appendChild(wrap);
+}
+// 统一提示：成功 / 信息 3.5 秒自动消失；失败必须手动关（失败信息自己消失等于又静默了一次）。
+function opsToast(message, kind, opts) {
+  const host = document.getElementById('toastHost');
+  if (!host) return null;
+  while (host.children.length >= 4) host.removeChild(host.firstElementChild);
+  const el = document.createElement('div');
+  el.className = 'toast toast-' + (kind || 'info');
+  el.setAttribute('role', kind === 'err' ? 'alert' : 'status');
+  const text = document.createElement('span');
+  text.className = 'toast-text';
+  text.textContent = String(message == null ? '' : message);
+  el.appendChild(text);
+  if (kind === 'err') {
+    const close = document.createElement('button');
+    close.type = 'button';
+    close.className = 'toast-close';
+    close.textContent = '×';
+    close.setAttribute('aria-label', '关闭提示');
+    close.addEventListener('click', () => el.remove());
+    el.appendChild(close);
+  } else {
+    const ms = opts && Number(opts.ms) > 0 ? Number(opts.ms) : 3500;
+    setTimeout(() => el.remove(), ms);
+  }
+  host.appendChild(el);
+  return el;
+}
+// 异步操作防重复提交：点击后立刻 disabled + 「处理中…」，请求结束（成功或失败）恢复原样。
+// 网络慢时用户会连点，重复请求会重复触发重启/切模型/改黑话策略等副作用。
+async function opsBusy(btn, fn) {
+  const label = btn ? btn.textContent : '';
+  if (btn) {
+    if (btn.dataset.busy === '1') return;
+    btn.dataset.busy = '1';
+    btn.dataset.wasDisabled = btn.disabled ? '1' : '';
+    btn.disabled = true;
+    btn.textContent = '处理中…';
+  }
+  try {
+    return await fn();
+  } catch (e) {
+    opsToast('操作失败：' + (e && e.message ? e.message : String(e)), 'err');
+  } finally {
+    if (btn) {
+      btn.dataset.busy = '';
+      btn.disabled = btn.dataset.wasDisabled === '1';
+      btn.textContent = label;
+    }
+  }
+}
+function fmtUptime(sec) {
+  const s = Number(sec) || 0;
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
+  return h ? `${h} 小时 ${m} 分` : (m ? `${m} 分 ${Math.floor(s % 60)} 秒` : `${Math.floor(s)} 秒`);
+}
+async function tick() {
+  try {
+    const res = await fetch('/api/ops/status' + (token ? '?token=' + encodeURIComponent(token) : ''), { cache: 'no-store' });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || 'status 失败');
+    setDot('dot-bridge', true);
+    setText('bridge-pid', data.bridge.pid);
+    setText('bridge-uptime', fmtUptime(data.bridge.uptimeSec));
+    setText('bridge-mode', data.bridge.mode);
+    setText('bridge-port', data.bridge.port);
+    setText('bridge-sessions', data.bridge.sessions);
+    setText('bridge-convs', data.bridge.conversations);
+
+    setDot('dot-dsh', data.dsh.ok);
+    setText('dsh-url', data.dsh.url);
+    setText('dsh-probe', data.dsh.ok ? `可达（HTTP ${data.dsh.status}）` : `不可达：${data.dsh.error || '未知'}`);
+    setText('dsh-ms', data.dsh.ms == null ? '—' : data.dsh.ms + ' ms');
+
+    setDot('dot-snow', data.snowluma.ok);
+    setText('snow-url', data.snowluma.url);
+    setText('snow-nick', data.snowluma.nickname ? `${data.snowluma.nickname}（${data.snowluma.userId}）` : '未登录/未知');
+    setText('snow-probe', data.snowluma.ok ? '可达' : `不可达：${data.snowluma.error || '未知'}`);
+
+    document.getElementById('log').textContent = (data.log || []).join('\n') || '（空）';
+    setText('stamp', '更新于 ' + new Date().toLocaleTimeString('zh-CN', { hour12: false }));
+  } catch (error) {
+    setDot('dot-bridge', false);
+    document.getElementById('log').textContent = '状态获取失败：' + (error && error.message ? error.message : error);
+  }
+}
+tick();
+
+const ACTION_LABEL = { start: '启动', stop: '停止', restart: '重启' };
+let pendingConfirm = null;
+
+async function runAction(service, action, btn) {
+  if (pendingConfirm !== service + ':' + action) {
+    pendingConfirm = service + ':' + action;
+    btn.textContent = '确认' + ACTION_LABEL[action] + '？';
+    btn.style.background = '#5a1f1f';
+    btn.style.color = '#ffb3b3';
+    setTimeout(() => { if (pendingConfirm === service + ':' + action) { pendingConfirm = null; renderServices(lastServices); } }, 4000);
+    return;
+  }
+  pendingConfirm = null;
+  btn.disabled = true;
+  btn.textContent = '执行中…';
+  try {
+    const res = await fetch('/api/ops/action' + (token ? '?token=' + encodeURIComponent(token) : ''), {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ service, action })
+    });
+    const data = await res.json();
+    const msg = document.getElementById('svc-msg');
+    msg.textContent = (data.ok ? '✅ ' : '⚠️ ') + service + ' ' + action + '：' + JSON.stringify(data.results || data.error || data).slice(0, 200);
+    await tickServices();
+  } catch (error) {
+    document.getElementById('svc-msg').textContent = '操作失败：' + (error && error.message ? error.message : error);
+  }
+}
+
+let lastServices = [];
+function renderServices(services) {
+  lastServices = services || [];
+  const body = document.getElementById('svc-body');
+  if (!body) return;
+  if (!lastServices.length) { body.innerHTML = '<tr><td colspan="5" class="dim" style="padding:8px">无数据</td></tr>'; return; }
+  body.innerHTML = '';
+  for (const s of lastServices) {
+    const tr = document.createElement('tr');
+    tr.style.borderTop = '1px solid var(--line)';
+    const dot = '<span class="dot ' + (s.ok ? 'ok' : 'bad') + '"></span>';
+    tr.innerHTML = '<td style="padding:6px 8px">' + esc(s.name) + '</td>'
+      + '<td style="padding:6px 8px">' + dot + ' ' + (s.ok ? '正常' : '异常') + '</td>'
+      + '<td style="padding:6px 8px;color:var(--dim)">' + esc(s.detail || '') + '</td>'
+      + '<td style="padding:6px 8px;color:var(--dim)">' + esc(s.supervision || '') + '</td>'
+      + '<td style="padding:6px 8px" class="svc-actions"></td>';
+    const cell = tr.querySelector('.svc-actions');
+    for (const action of s.actions || []) {
+      const btn = document.createElement('button');
+      btn.textContent = ACTION_LABEL[action] || action;
+      btn.style.cssText = 'margin-right:6px;padding:3px 9px;border-radius:6px;border:1px solid var(--line);background:#1d222c;color:var(--text);cursor:pointer;font-size:12px';
+      btn.onclick = () => runAction(s.id, action, btn);
+      cell.appendChild(btn);
+    }
+    if (!(s.actions || []).length) cell.textContent = '—';
+    body.appendChild(tr);
+  }
+}
+
+async function tickServices() {
+  try {
+    const res = await fetch('/api/ops/services' + (token ? '?token=' + encodeURIComponent(token) : ''), { cache: 'no-store' });
+    const data = await res.json();
+    // 以前只在 data.ok 时重绘：401/500 时服务表永远停在「加载中…」，看不出是失败了。
+    if (!res.ok || !data.ok) throw new Error(data.error || ('HTTP ' + res.status));
+    opsClearMsgError('svc-msg');
+    renderServices(data.services);
+  } catch (error) {
+    opsMsgError('svc-msg', '服务表读取失败（下表不是最新状态）', error);
+  }
+}
+tickServices();
+
+let slangCache = [];
+async function loadSlang() {
+  try {
+    const res = await fetch('/api/slang' + (token ? '?token=' + encodeURIComponent(token) : ''), { cache: 'no-store' });
+    const data = await res.json();
+    // 注意：GET /api/slang 的成功响应是 {entries, config, writable}，没有 ok 字段，
+    // 所以这里判的是「entries 是不是数组」而不是 data.ok。
+    const list = data.entries || data.items;
+    if (!res.ok || !Array.isArray(list)) throw new Error(data.error || ('HTTP ' + res.status));
+    slangCache = list;
+    opsClearMsgError('slang-msg');
+    renderSlang();
+  } catch (error) {
+    // 以前 401 的 {ok:false,error} 会退化成空数组，界面显示「没有匹配的条目」——那是假的空。
+    slangCache = [];
+    const cnt = document.getElementById('slang-count');
+    if (cnt) cnt.textContent = '加载失败';
+    opsMsgError('slang-msg', '黑话词条加载失败', error);
+    opsGridError('slang-list', '黑话词条加载失败（不是「没有条目」）', error);
+  }
+}
+function renderSlang() {
+  const list = document.getElementById('slang-list');
+  const filter = (document.getElementById('slang-filter').value || '').trim();
+  const onlyListen = document.getElementById('slang-only-listen').checked;
+  const rows = slangCache
+    .filter((e) => !onlyListen || e.usagePolicy !== 'usable')
+    .filter((e) => !filter || String(e.content || '').includes(filter))
+    .sort((a, b) => (b.count || 0) - (a.count || 0))
+    .slice(0, 200);
+  document.getElementById('slang-count').textContent = '共 ' + rows.length + ' 条';
+  if (!rows.length) { list.innerHTML = '<div class="dim" style="padding:8px">没有匹配的条目</div>'; return; }
+  list.innerHTML = '';
+  for (const e of rows) {
+    const row = document.createElement('div');
+    row.className = 'slang-row';
+    row.style.cssText = 'display:flex;gap:8px;align-items:flex-start;padding:5px 0;border-bottom:1px solid var(--line)';
+    const usable = e.usagePolicy === 'usable';
+    const badge = usable ? '可以' : '听懂';
+    const color = usable ? 'var(--ok)' : 'var(--warn)';
+    // 词条/释义来自群聊自动提取与 AI 提交（群友可控），必须走 textContent，
+    // 不能拼进 innerHTML —— 否则就是存储型 XSS。
+    const badgeEl = document.createElement('span');
+    badgeEl.style.cssText = 'flex:0 0 34px;font-size:11px;color:' + color;
+    badgeEl.textContent = badge;
+    const wordEl = document.createElement('span');
+    wordEl.className = 'slang-word';
+    wordEl.style.cssText = 'flex:0 0 92px;font-weight:600';
+    wordEl.textContent = String(e.content || '');
+    const meaningEl = document.createElement('span');
+    meaningEl.className = 'dim';
+    meaningEl.style.cssText = 'flex:1;font-size:12px';
+    meaningEl.textContent = String(e.meaning || '').slice(0, 70);
+    row.appendChild(badgeEl);
+    row.appendChild(wordEl);
+    row.appendChild(meaningEl);
+    const btn = document.createElement('button');
+    btn.textContent = usable ? '降为听懂' : '升为可用';
+    btn.style.cssText = 'flex:0 0 auto;padding:2px 8px;border-radius:6px;border:1px solid var(--line);background:#1d222c;color:var(--text);cursor:pointer;font-size:11px';
+    btn.onclick = () => opsBusy(btn, async () => {
+      try {
+        const res = await fetch('/api/slang/policy' + (token ? '?token=' + encodeURIComponent(token) : ''), {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ content: e.content, usagePolicy: usable ? 'understand-only' : 'usable' })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.ok) throw new Error(data.error || ('HTTP ' + res.status));
+        document.getElementById('slang-msg').textContent = '✅ ' + e.content + ' → ' + (usable ? '听懂' : '可以用');
+        await loadSlang();
+      } catch (err) {
+        document.getElementById('slang-msg').textContent = '操作失败：' + (err && err.message ? err.message : err);
+      }
+    });
+    row.appendChild(btn);
+    list.appendChild(row);
+  }
+}
+document.getElementById('slang-filter')?.addEventListener('input', renderSlang);
+document.getElementById('slang-only-listen')?.addEventListener('change', renderSlang);
+
+// 点击行选中/取消选中（点按钮时不触发）
+document.getElementById('slang-list')?.addEventListener('click', (ev) => {
+  if (ev.target && ev.target.tagName === 'BUTTON') return;
+  const row = ev.target.closest ? ev.target.closest(".slang-row") : null;
+  if (!row) return;
+  row.classList.toggle('sel');
+  const word = row.querySelector('.slang-word');
+  document.getElementById('slang-msg').textContent = row.classList.contains('sel')
+    ? '已选中：' + (word ? word.textContent : '') + '（再点一次取消）'
+    : '';
+});
+loadSlang();
+let stickerCache = [];
+let stickerRawCount = 0;
+let stickerMergedCount = 0;
+let stickerTotal = 0;          // 接口给的 total（去重后的权威总数），不本地算
+function isStickerBroken(e) {
+  return Boolean(e && (e.thumbStatus === 'missing' || STICKER_BROKEN_IDS.has(e.id)));
+}
+let stickerPage = 0;
+const STICKER_PAGE_SIZE = 48;
+function setStickerMsg(text, color) {
+  const el = document.getElementById('sticker-msg');
+  if (!el) return;
+  el.textContent = text;
+  el.style.color = color || 'var(--dim)';
+  el.style.fontWeight = color ? '600' : '400';
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => { el.style.fontWeight = '400'; }, 6000);
+}
+const SCENE_TAGS = [
+  '被夸/开心', '打招呼', '无语/敷衍', '自嘲/摆烂', '被打败/认输', '生气/抗议',
+  '害羞/撒娇', '吃瓜/看戏', '晚安/告辞', '震惊', '兴奋', '感谢', '安慰', '搞怪/整活'
+];
+// ── 去重（面板侧，纯展示层）：同 md5（无 md5 用 id）只留一条，字段合并不丢人工备注 ──
+// 说明：真正的「写入时去重 + POST /api/stickers/dedupe」在后端；这里先把已有重复折叠掉，
+// 接口落地后再配合「合并重复」按钮把数据侧也清掉。
+function stickerDedupeKey(e) {
+  const md5 = String(e && e.md5 || '').trim().toUpperCase();
+  return md5 ? ('md5:' + md5) : ('id:' + String(e && e.id || ''));
+}
+function stickerHasManual(e) {
+  return Boolean(String(e && (e.localNote || '').trim()) || (Array.isArray(e.tags) && e.tags.length));
+}
+function stickerTime(e) {
+  const t = Date.parse((e && (e.updatedAt || e.createdAt)) || '');
+  return Number.isFinite(t) ? t : 0;
+}
+function mergeStickerEntries(group) {
+  // 人工设置优先：优先选有 localNote/tags 的那条；都一样就看 updatedAt 新的
+  const withManual = group.filter(stickerHasManual);
+  const pool = withManual.length ? withManual : group;
+  pool.sort((a, b) => stickerTime(b) - stickerTime(a));
+  const base = { ...pool[0] };
+  const notes = group.map((e) => String(e.localNote || '').trim()).filter(Boolean);
+  const descs = group.map((e) => String(e.desc || '').trim()).filter(Boolean);
+  const usages = group.map((e) => String(e.usage || '').trim()).filter(Boolean);
+  const tags = [...new Set(group.flatMap((e) => (Array.isArray(e.tags) ? e.tags : [])))];
+  base.localNote = (base.localNote || '').trim() || notes.sort((a, b) => b.length - a.length)[0] || '';
+  base.desc = base.desc || descs[0] || '';
+  base.usage = base.usage || usages[0] || '';
+  base.tags = tags;
+  // 可发/不可发冲突时：任一条被人工设成可发就保留可发（不丢用户设置）
+  base.policy = group.some((e) => e.policy === 'usable') ? 'usable' : 'understand-only';
+  base.__mergedCount = group.length;
+  return base;
+}
+function dedupeStickerEntries(list) {
+  const map = new Map();
+  for (const e of list) {
+    const k = stickerDedupeKey(e);
+    if (!map.has(k)) map.set(k, []);
+    map.get(k).push(e);
+  }
+  const unique = [];
+  let merged = 0;
+  for (const group of map.values()) {
+    unique.push(group.length > 1 ? mergeStickerEntries(group) : group[0]);
+    merged += group.length - 1;
+  }
+  return { unique, merged, before: list.length, after: unique.length };
+}
+// ── 缩略图来源链：本地 md5 路由 → 桥接 thumbnail（内部再走缓存）→ QQ CDN → 占位 ──
+const STICKER_BROKEN_IDS = new Set();
+function stickerThumbChain(e) {
+  const chain = [];
+  const md5 = String(e && e.md5 || '').trim();
+  const q = token ? '&token=' + encodeURIComponent(token) : '';
+  // 桥接只有 /api/stickers/thumbnail（按 id 查）；旧的 /api/stickers/thumb 早就不存在，
+  // 保留那一层只会白白打出一条 404。
+  chain.push('/api/stickers/thumbnail?id=' + encodeURIComponent(e.id) + q);
+  if (e && e.url) chain.push(String(e.url));
+  return chain;
+}
+async function removeSticker(e, btn) {
+  if (btn && btn.disabled) return;
+  if (btn) { btn.disabled = true; btn.textContent = '删除中…'; }
+  try {
+    const res = await fetch('/api/stickers/remove' + (token ? '?token=' + encodeURIComponent(token) : ''), {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ id: e.id, stickerId: e.id })
+    });
+    const raw = await res.text();
+    let data = null;
+    try { data = JSON.parse(raw); } catch { data = null; }
+    if (!res.ok || !data || data.ok !== true) {
+      const detail = (data && (data.error || data.message)) || raw.slice(0, 120) || ('HTTP ' + res.status);
+      setStickerMsg('删除失败：POST /api/stickers/remove ' + res.status + ' — ' + detail, '#ff9d9d');
+      return;
+    }
+    setStickerMsg('已删除失效表情（' + String(e.id).slice(0, 10) + '）', '#7dffb0');
+    await loadStickers();
+  } catch (err) {
+    setStickerMsg('删除失败：POST /api/stickers/remove — ' + (err && err.message ? err.message : err), '#ff9d9d');
+  } finally {
+    if (btn && btn.isConnected !== false) { btn.disabled = false; btn.textContent = '删除该条'; }
+  }
+}
+async function dedupeStickers(btn) {
+  if (btn && btn.disabled) return;
+  if (btn) { btn.disabled = true; btn.textContent = '合并中…'; }
+  setStickerMsg('合并重复中…', '#8b93a3');
+  try {
+    const res = await fetch('/api/stickers/dedupe' + (token ? '?token=' + encodeURIComponent(token) : ''), {
+      method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({})
+    });
+    const raw = await res.text();
+    let data = null;
+    try { data = JSON.parse(raw); } catch { data = null; }
+    if (!res.ok || !data || data.ok !== true) {
+      const detail = (data && (data.error || data.message)) || raw.slice(0, 120) || ('HTTP ' + res.status);
+      setStickerMsg('合并重复失败：POST /api/stickers/dedupe ' + res.status + ' — ' + detail, '#ff9d9d');
+      return;
+    }
+    setStickerMsg('已合并 ' + (data.merged ?? 0) + ' 条重复（' + (data.before ?? '?') + ' → ' + (data.after ?? '?') + '）', '#7dffb0');
+    await loadStickers();
+  } catch (err) {
+    setStickerMsg('合并重复失败：POST /api/stickers/dedupe — ' + (err && err.message ? err.message : err), '#ff9d9d');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '合并重复'; }
+  }
+}
+
+async function loadStickers() {
+  try {
+    const listPath = '/api/stickers?count=500';
+    const res = await fetch(listPath + (token ? '&token=' + encodeURIComponent(token) : ''), { cache: 'no-store' });
+    const raw = await res.text();
+    let data = null;
+    try { data = JSON.parse(raw); } catch { data = null; }
+    // 失败文案统一带上「接口 + 状态 + 原始错误」，别只写一句含糊的「加载失败」
+    if (!res.ok || !data || data.ok !== true) {
+      const detail = (data && (data.error || data.message)) || raw.slice(0, 120) || res.statusText || '响应无法解析';
+      throw new Error('GET ' + listPath + ' ' + res.status + ' — ' + detail);
+    }
+    const rawList = Array.isArray(data) ? data : (data.stickers || data.entries || []);
+    const deduped = dedupeStickerEntries(rawList);
+    stickerCache = deduped.unique;
+    stickerRawCount = deduped.before;
+    stickerMergedCount = deduped.merged;
+    stickerTotal = Number(data.total) > 0 ? Number(data.total) : deduped.after;
+    const sm = document.getElementById('sticker-msg');
+    if (sm && sm.dataset.err === '1') { setStickerMsg(''); delete sm.dataset.err; }
+    renderStickers();
+  } catch (error) {
+    // 以前没有 try/catch：未捕获的 rejection 会让 #sticker-grid 永久空白（看着像「没有收藏」）。
+    setStickerMsg('⚠️ 表情加载失败：' + (error && error.message ? error.message : error), '#ff9d9d');
+    const sm = document.getElementById('sticker-msg');
+    if (sm) sm.dataset.err = '1';
+    opsGridError('sticker-grid', '表情列表加载失败（不是「没有收藏」）', error);
+  }
+}
+async function saveStickerNote(e, noteEl, chipsEl) {
+  const tags = [...chipsEl.querySelectorAll('button')].filter((c) => c.dataset.on === '1').map((c) => c.dataset.tag);
+  const note = noteEl.value.trim();
+  const origNote = String(noteEl.dataset.orig || '').trim();
+  const origTags = Array.isArray(e.tags) ? e.tags.slice().sort().join('\u0000') : '';
+  // 只绑 change（blur 那次是重复的，文本输入的 change 本来就在失焦时触发）；
+  // 再比对上次已保存的 note/tags，没有变化就不发请求 —— 点标签也会连带触发保存，
+  // 光去掉双绑还挡不住重复写。
+  if (note === origNote && tags.slice().sort().join('\u0000') === origTags) return;
+  try {
+    const r = await fetch('/api/stickers/note' + (token ? '?token=' + encodeURIComponent(token) : ''), {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ stickerId: e.id, note, tags })
+    }).then((x) => x.json());
+    if (r.ok) {
+      e.localNote = note;
+      e.tags = tags;
+      noteEl.dataset.orig = note;
+      setStickerMsg('💾 已自动保存：' + String(e.id).slice(0, 10), '#7dffb0');
+    } else setStickerMsg('⚠️ 保存失败：' + (r.error || ''), '#ffcf8a');
+  } catch (err) { setStickerMsg('⚠️ 保存失败：' + err, '#ffcf8a'); }
+}
+
+async function setStickerPolicy(e, policy) {
+  try {
+    const r = await fetch('/api/stickers/policy' + (token ? '?token=' + encodeURIComponent(token) : ''), {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ id: e.id, policy })
+    }).then((x) => x.json());
+    if (r.ok) setStickerMsg(policy === 'usable' ? '🔵 已设为「可发」' : '🔴 已设为「不可发」', policy === 'usable' ? '#7ab7ff' : '#ff9d9d');
+    else setStickerMsg('⚠️ 失败：' + (r.error || ''), '#ffcf8a');
+    if (r.ok) { e.policy = policy; renderStickers(); }
+    else { await loadStickers(); }
+  } catch (err) { setStickerMsg('⚠️ 失败：' + err, '#ffcf8a'); }
+}
+
+// ── 表情缩略图：三级兜底，任何一步失败都不能出现浏览器默认碎图标 ────────────
+// 顺序：桥接本地缓存路由（/api/stickers/thumbnail，内部会先读 state/sticker-files 再联网）
+//       → md5 命中的本地文件（同一路由已覆盖，这里保留为直连兜底位）
+//       → QQ 原始 URL 直连（可能已过期）→ 占位图 + 「缩略图不可用（可用「重新拉取」）」
+// 修前：onerror 后只写一句「已失效」，既没说明原因也没告诉用户能怎么办。
+const STICKER_PLACEHOLDER_TEXT = '缩略图不可用（本地缓存缺失/损坏，可用「重新拉取」）';
+const STICKER_EXPIRED_TEXT = '缩略图不可用 · 源链接已过期';
+function stickerThumbUrl(e) {
+  return '/api/stickers/thumbnail?id=' + encodeURIComponent(e.id) + (token ? '&token=' + encodeURIComponent(token) : '');
+}
+function stickerAlt(e) {
+  return String(e.localNote || e.desc || '表情缩略图');
+}
+function buildStickerThumb(e) {
+  const host = document.createElement('div');
+  host.style.cssText = 'height:90px;background:#11151c;border-radius:6px;overflow:hidden;display:flex;align-items:center;justify-content:center';
+  const img = document.createElement('img');
+  img.alt = stickerAlt(e);
+  img.loading = 'lazy';
+  img.referrerPolicy = 'no-referrer';
+  img.style.cssText = 'width:100%;height:100%;object-fit:contain';
+  const chain = stickerThumbChain(e);
+  let stage = 0;
+  const showPlaceholder = (text) => {
+    STICKER_BROKEN_IDS.add(e.id);
+    img.remove();
+    const ph = document.createElement('div');
+    ph.textContent = text || STICKER_PLACEHOLDER_TEXT;
+    ph.title = e.thumbError || '桥接按 md5 缓存与联网取图都失败；链接可能已过期';
+    ph.style.cssText = 'padding:0 6px;text-align:center;color:#8b93a3;font-size:11px;line-height:1.3';
+    host.appendChild(ph);
+  };
+  // 后端已判定失效（源链接过期、采集时没落盘）：不再发请求，直接占位
+  if (e && e.thumbStatus === 'missing') {
+    showPlaceholder(STICKER_EXPIRED_TEXT);
+    return host;
+  }
+  img.onerror = () => {
+    // 按来源链推进：本地 md5 路由 → thumbnail（内部缓存）→ QQ CDN → 占位
+    stage += 1;
+    if (stage < chain.length) {
+      img.src = chain[stage];
+      return;
+    }
+    showPlaceholder();
+  };
+  img.src = chain[0];
+  host.appendChild(img);
+  return host;
+}
+// 重新拉取：后端只有批量接口 POST /api/stickers/repair {apply}（预演默认 false）。
+// 单卡按钮也走它（后端会修所有缺 md5 的条目），完成后刷新整页并就地换图。
+async function repairStickers(btn) {
+  if (btn && btn.disabled) return;
+  if (btn) { btn.disabled = true; btn.textContent = '拉取中…'; }
+  setStickerMsg('重新拉取中…（桥接会尝试把表情图落到本地缓存）', '#8b93a3');
+  try {
+    const res = await fetch('/api/stickers/repair' + (token ? '?token=' + encodeURIComponent(token) : ''), {
+      method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ apply: true })
+    });
+    const raw = await res.text();
+    let data = null;
+    try { data = JSON.parse(raw); } catch { data = null; }
+    if (!res.ok) {
+      const detail = (data && (data.error || data.message)) || raw.slice(0, 120) || ('HTTP ' + res.status);
+      setStickerMsg('重新拉取失败：POST /api/stickers/repair ' + res.status + ' — ' + detail, '#ff9d9d');
+      return;
+    }
+    if (!data || data.ok !== true) {
+      setStickerMsg('重新拉取失败：POST /api/stickers/repair 返回结构不认识 — ' + raw.slice(0, 120), '#ff9d9d');
+      return;
+    }
+    const repaired = Array.isArray(data.repaired) ? data.repaired.length : 0;
+    const dead = Array.isArray(data.dead) ? data.dead.length : 0;
+    const failed = Array.isArray(data.failed) ? data.failed.length : 0;
+    setStickerMsg('已重新拉取：修复 ' + repaired + ' ／ 失效 ' + dead + ' ／ 失败 ' + failed, repaired ? '#7dffb0' : '#ffcf8a');
+    await loadStickers();
+  } catch (err) {
+    setStickerMsg('重新拉取失败：POST /api/stickers/repair — ' + (err && err.message ? err.message : err), '#ff9d9d');
+  } finally {
+    if (btn && btn.isConnected !== false) { btn.disabled = false; btn.textContent = '重新拉取'; }
+  }
+}
+async function repairAllStickers(btn) {
+  if (btn && btn.disabled) return;
+  if (btn) { btn.disabled = true; btn.textContent = '拉取中…'; }
+  setStickerMsg('批量重新拉取中…共 ' + stickerCache.length + ' 条', '#8b93a3');
+  try {
+    const res = await fetch('/api/stickers/repair' + (token ? '?token=' + encodeURIComponent(token) : ''), {
+      method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ apply: true })
+    });
+    const raw = await res.text();
+    let data = null;
+    try { data = JSON.parse(raw); } catch { data = null; }
+    if (!res.ok || !data || data.ok !== true) {
+      const detail = (data && (data.error || data.message)) || raw.slice(0, 120) || ('HTTP ' + res.status);
+      setStickerMsg('批量重新拉取失败：POST /api/stickers/repair ' + res.status + ' — ' + detail, '#ff9d9d');
+      return;
+    }
+    const repaired = Array.isArray(data.repaired) ? data.repaired.length : 0;
+    const dead = Array.isArray(data.dead) ? data.dead.length : 0;
+    setStickerMsg('批量重新拉取完成：修复 ' + repaired + ' ／ 失效 ' + dead + ' ／ 总数 ' + (data.total ?? stickerCache.length), repaired ? '#7dffb0' : '#ffcf8a');
+    await loadStickers();
+  } catch (err) {
+    setStickerMsg('批量重新拉取失败：POST /api/stickers/repair — ' + (err && err.message ? err.message : err), '#ff9d9d');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '批量重新拉取'; }
+  }
+}
+
+function renderStickers() {
+  const grid = document.getElementById('sticker-grid');
+  const mode = (document.getElementById('sticker-filter') || {}).value || 'all';
+  const usableCount = stickerCache.filter((e) => e.policy === 'usable').length;
+  const unusableCount = stickerCache.length - usableCount;
+  const unlabeledCount = stickerCache.filter((e) => !(e.localNote || e.desc)).length;
+  const sortMode = (document.getElementById('sticker-sort') || {}).value || 'new';
+  const filtered = stickerCache.filter((e) => {
+    if (mode === 'nolabel') return !(e.localNote || e.desc);
+    if (mode === 'usable') return e.policy === 'usable';
+    if (mode === 'unusable') return e.policy !== 'usable';
+    if (mode === 'broken') return isStickerBroken(e);
+    return true;
+  });
+  const ts = (e) => { const t = Date.parse(e.createdAt || e.updatedAt || ''); return Number.isFinite(t) ? t : 0; };
+  // 收藏夹同步出来的 54 张时间戳完全相同，只按时间排会「看不出变化」；用库内顺序做次键。
+  const order = new Map(stickerCache.map((e, i) => [e.id, i]));
+  const idx = (e) => order.get(e.id) ?? 0;
+  filtered.sort((a, b) => {
+    const d = sortMode === 'old' ? ts(a) - ts(b) : ts(b) - ts(a);
+    if (d !== 0) return d;
+    return sortMode === 'old' ? idx(a) - idx(b) : idx(b) - idx(a);
+  });
+  const totalPages = Math.max(1, Math.ceil(filtered.length / STICKER_PAGE_SIZE));
+  if (stickerPage > totalPages - 1) stickerPage = totalPages - 1;
+  if (stickerPage < 0) stickerPage = 0;
+  const start = stickerPage * STICKER_PAGE_SIZE;
+  const list = filtered.slice(start, start + STICKER_PAGE_SIZE);
+  const brokenCount = stickerCache.filter(isStickerBroken).length;
+  document.getElementById('sticker-count').textContent =
+    '共 ' + (stickerTotal || stickerCache.length) + (stickerMergedCount ? '（合并掉 ' + stickerMergedCount + ' 条重复）' : '')
+    + ' ｜ 其中失效 ' + brokenCount + ' 条'
+    + ' ｜ 可发 ' + usableCount + ' ｜ 不可发 ' + unusableCount + ' ｜ 未注释 ' + unlabeledCount + ' ｜ 本页 ' + list.length;
+  const pgEl = document.getElementById('sticker-page');
+  if (pgEl) pgEl.textContent = (stickerPage + 1) + ' / ' + totalPages;
+  const prevBtn = document.getElementById('sticker-prev');
+  const nextBtn = document.getElementById('sticker-next');
+  if (prevBtn) prevBtn.disabled = stickerPage <= 0;
+  if (nextBtn) nextBtn.disabled = stickerPage >= totalPages - 1;
+  grid.innerHTML = '';
+  for (const e of list) {
+    const usable = e.policy === 'usable';
+    const card = document.createElement('div');
+    card.style.cssText = 'border:1px solid ' + (usable ? '#2f6fbf' : '#a33') + ';border-left:4px solid ' + (usable ? '#4d9fff' : '#ff5d5d') + ';border-radius:8px;padding:8px;display:flex;flex-direction:column;gap:6px;background:' + (usable ? '#0d1826' : '#160d0d');
+    const badge = document.createElement('div');
+    badge.textContent = usable ? '● 可发（她会用）' : '● 不可发（她只看得懂）';
+    badge.style.cssText = 'font-size:11px;font-weight:600;color:' + (usable ? '#7ab7ff' : '#ff9d9d');
+    card.appendChild(badge);
+    card.appendChild(buildStickerThumb(e));
+    const retryRow = document.createElement('div');
+    retryRow.style.cssText = 'display:flex;gap:6px';
+    const retryBtn = document.createElement('button');
+    retryBtn.textContent = '重新拉取';
+    retryBtn.type = 'button';
+    retryBtn.setAttribute('aria-label', '重新拉取表情缩略图：' + (e.localNote || e.desc || e.id));
+    retryBtn.style.cssText = 'flex:1;padding:3px;border-radius:5px;cursor:pointer;font-size:11px;border:1px solid var(--line);background:#161b24;color:var(--text)';
+    retryBtn.onclick = () => repairStickers(retryBtn);
+    retryRow.appendChild(retryBtn);
+    card.appendChild(retryRow);
+    if (isStickerBroken(e)) {
+      const brokenRow = document.createElement('div');
+      brokenRow.style.cssText = 'display:flex;flex-direction:column;gap:4px';
+      const hint = document.createElement('div');
+      hint.textContent = '可重新采集：群内发「/收藏」或让 AI 再偷一次；这条源链接已过期、无法恢复。';
+      hint.style.cssText = 'font-size:11px;color:#ffcf8a;line-height:1.3';
+      const delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.textContent = '删除该条';
+      delBtn.setAttribute('aria-label', '删除失效表情：' + (e.localNote || e.desc || e.id));
+      delBtn.style.cssText = 'padding:3px;border-radius:5px;cursor:pointer;font-size:11px;border:1px solid #a33;background:#3a1515;color:#ff9d9d';
+      delBtn.onclick = () => removeSticker(e, delBtn);
+      brokenRow.appendChild(hint);
+      brokenRow.appendChild(delBtn);
+      card.appendChild(brokenRow);
+    }
+    const note = document.createElement('input');
+    note.placeholder = '这张图什么意思/什么场合用（改完自动保存）';
+    note.value = e.localNote || e.desc || '';
+    note.dataset.orig = note.value;
+    note.style.cssText = 'padding:4px 6px;border-radius:5px;border:1px solid var(--line);background:#161b24;color:var(--text);font-size:12px';
+    card.appendChild(note);
+    const chips = document.createElement('div');
+    chips.style.cssText = 'display:flex;flex-wrap:wrap;gap:3px';
+    const onSet = new Set(Array.isArray(e.tags) ? e.tags : []);
+    for (const t of SCENE_TAGS) {
+      const chip = document.createElement('button');
+      chip.textContent = t;
+      chip.dataset.tag = t;
+      const on = onSet.has(t);
+      chip.dataset.on = on ? '1' : '';
+      chip.style.cssText = 'padding:1px 6px;border-radius:10px;font-size:10px;cursor:pointer;border:1px solid var(--line);background:' + (on ? '#153a24' : '#161b24') + ';color:' + (on ? '#7dffb0' : 'var(--dim)');
+      chip.onclick = async () => {
+        const isOn = chip.dataset.on === '1';
+        chip.dataset.on = isOn ? '' : '1';
+        chip.style.background = isOn ? '#161b24' : '#153a24';
+        chip.style.color = isOn ? 'var(--dim)' : '#7dffb0';
+        await saveStickerNote(e, note, chips);
+      };
+      chips.appendChild(chip);
+    }
+    card.appendChild(chips);
+    note.addEventListener('change', () => saveStickerNote(e, note, chips));
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:6px';
+    const bOn = document.createElement('button');
+    bOn.textContent = '可发';
+    bOn.style.cssText = 'flex:1;padding:3px;border-radius:5px;cursor:pointer;font-size:12px;border:1px solid ' + (usable ? '#4d9fff' : '#2a3140') + ';background:' + (usable ? '#153a5c' : '#161b24') + ';color:' + (usable ? '#7ab7ff' : 'var(--dim)');
+    bOn.onclick = () => setStickerPolicy(e, 'usable');
+    const bOff = document.createElement('button');
+    bOff.textContent = '不可发';
+    bOff.style.cssText = 'flex:1;padding:3px;border-radius:5px;cursor:pointer;font-size:12px;border:1px solid ' + (!usable ? '#ff5d5d' : '#2a3140') + ';background:' + (!usable ? '#3a1515' : '#161b24') + ';color:' + (!usable ? '#ff9d9d' : 'var(--dim)');
+    bOff.onclick = () => setStickerPolicy(e, 'understand-only');
+    row.appendChild(bOn);
+    row.appendChild(bOff);
+    card.appendChild(row);
+    grid.appendChild(card);
+  }
+}
+
+document.getElementById('sticker-dedupe')?.addEventListener('click', (ev) => dedupeStickers(ev.currentTarget));
+document.getElementById('sticker-repair-all')?.addEventListener('click', (ev) => repairAllStickers(ev.currentTarget));
+document.getElementById('sticker-filter')?.addEventListener('change', renderStickers);
+document.getElementById('sticker-prev')?.addEventListener('click', () => { stickerPage -= 1; renderStickers(); });
+document.getElementById('sticker-next')?.addEventListener('click', () => { stickerPage += 1; renderStickers(); });
+document.getElementById('sticker-sort')?.addEventListener('change', () => { stickerPage = 0; renderStickers(); });
+document.getElementById('sticker-filter')?.addEventListener('change', () => { stickerPage = 0; });
+loadStickers();
+
+// ── 高峰期与模型（路由）─────────────────────────────────────────────────────
+// 数据源（A 的 msg-a57）：GET /api/model-routing →
+//   { peakPause:{enabled,schedule,windows,inWindow,active},
+//     routing:{ idle, peak, fallback:[...], disabled:[...] },
+//     effective:{provider,model,source}, options:[...] }
+// 保存：POST /api/model-routing { idle?, peak?, fallback?, disabled?, peakPauseEnabled? }
+// 所有改动先落在 routingDraft，点「保存」才一次性提交。
+const ROUTING_SOURCE = { peak: '高峰', idle: '空闲', media: '视觉', fallback: '降级', default: '默认' };
+const ROUTING_MAX_FALLBACK = 5;
+let routingData = null;
+let routingDraft = null;
+let routingOptions = [];
+let routingHasCatalog = false;   // 服务端是否真的给过清单（决定下拉是否可编辑）
+let routingStats = '';
+let routingErr = '';
+let routingMsgTimer = null;
+
+function routingKey(v) {
+  if (!v) return '';
+  if (typeof v === 'string') return v;
+  return v.provider && v.model ? (v.provider + '/' + v.model) : '';
+}
+function routingLabel(key) {
+  const o = routingOptions.find((x) => routingKey(x) === key);
+  return o ? (o.label || key) : key;
+}
+function routingOptionsHtml(current) {
+  const list = routingOptions.slice();
+  const known = list.some((o) => routingKey(o) === current);
+  const unknown = current && !known ? '<option value="' + esc(current) + '" selected>当前：' + esc(current) + '（不在清单）</option>' : '';
+  return unknown + list.map((o) => '<option value="' + esc(routingKey(o)) + '"' + (routingKey(o) === current ? ' selected' : '') + '>'
+    + esc((o.label || routingKey(o)) + '（' + routingKey(o) + '）') + '</option>').join('');
+}
+function routingDirty() {
+  if (!routingData || !routingDraft) return false;
+  const a = routingData.routing || {};
+  const same = (x, y) => JSON.stringify(x || []) === JSON.stringify(y || []);
+  return routingKey(a.idle) !== routingDraft.idle
+    || routingKey(a.peak) !== routingDraft.peak
+    || !same((a.fallback || []).map(routingKey), routingDraft.fallback)
+    || !same((a.disabled || []).map(routingKey), routingDraft.disabled)
+    || Boolean(routingData.peakPause && routingData.peakPause.enabled) !== routingDraft.peakPauseEnabled;
+}
+function renderRouting() {
+  const body = document.getElementById('routing-body');
+  const errEl = document.getElementById('routing-error');
+  if (!body) return;
+  if (!routingData) {
+    body.hidden = true;
+    if (errEl) errEl.textContent = routingErr;
+    return;
+  }
+  body.hidden = false;
+  if (errEl) errEl.textContent = '';
+  const paused = routingData.peakPause || {};
+  const windows = (paused.windows || []).map((w) => w.start + '–' + w.end).join('、');
+  const enabledEl = document.getElementById('routing-peak-enabled');
+  if (enabledEl) enabledEl.checked = routingDraft.peakPauseEnabled;
+  const winEl = document.getElementById('routing-window');
+  if (winEl) {
+    winEl.textContent = '窗口：' + (windows || '后端未提供') + (paused.inWindow ? '（当前在时段内）' : '（当前不在时段内）')
+      + (paused.active ? ' · 暂停生效中' : '');
+  }
+  const idleSel = document.getElementById('routing-idle');
+  const peakSel = document.getElementById('routing-peak');
+  // 「能不能编辑」看服务端清单是否给过；合成出来的「不在清单」项只用于显示，不算清单可用。
+  const noOptions = !routingHasCatalog;
+  if (idleSel) {
+    idleSel.innerHTML = routingOptionsHtml(routingDraft.idle);
+    idleSel.value = routingDraft.idle;
+    idleSel.disabled = noOptions;
+  }
+  if (peakSel) {
+    peakSel.innerHTML = routingOptionsHtml(routingDraft.peak);
+    peakSel.value = routingDraft.peak;
+    peakSel.disabled = noOptions;
+  }
+  const idleCur = document.getElementById('routing-idle-cur');
+  const peakCur = document.getElementById('routing-peak-cur');
+  if (idleCur) idleCur.textContent = routingDraft.idle || '未设置';
+  if (peakCur) peakCur.textContent = routingDraft.peak || '未设置';
+  const fbBox = document.getElementById('routing-fallback');
+  if (fbBox) {
+    fbBox.innerHTML = routingDraft.fallback.map((key, idx) => '<li style="margin:4px 0;display:flex;gap:6px;align-items:center">'
+      + '<select class="routing-fb" data-idx="' + idx + '" style="max-width:300px;padding:3px 6px;border-radius:5px;border:1px solid var(--line);background:#0b0d11;color:var(--text);font-size:12px"' + (noOptions ? ' disabled' : '') + '>'
+      + routingOptionsHtml(key) + '</select>'
+      + '<button class="routing-fb-up" data-idx="' + idx + '"' + (idx === 0 ? ' disabled' : '') + ' style="padding:1px 8px;border-radius:5px;border:1px solid var(--line);background:#161b24;color:var(--text);cursor:pointer">↑</button>'
+      + '<button class="routing-fb-down" data-idx="' + idx + '"' + (idx === routingDraft.fallback.length - 1 ? ' disabled' : '') + ' style="padding:1px 8px;border-radius:5px;border:1px solid var(--line);background:#161b24;color:var(--text);cursor:pointer">↓</button>'
+      + '<button class="routing-fb-del" data-idx="' + idx + '" style="padding:1px 8px;border-radius:5px;border:1px solid #a33;background:#3a1515;color:#ff9d9d;cursor:pointer">✕</button>'
+      + '</li>').join('');
+    fbBox.querySelectorAll('select.routing-fb').forEach((el) => el.addEventListener('change', () => {
+      routingDraft.fallback[Number(el.dataset.idx)] = el.value;
+      renderRouting();
+    }));
+    fbBox.querySelectorAll('button.routing-fb-up').forEach((el) => el.addEventListener('click', () => {
+      const i = Number(el.dataset.idx);
+      if (i <= 0) return;
+      const a = routingDraft.fallback;
+      [a[i - 1], a[i]] = [a[i], a[i - 1]];
+      renderRouting();
+    }));
+    fbBox.querySelectorAll('button.routing-fb-down').forEach((el) => el.addEventListener('click', () => {
+      const i = Number(el.dataset.idx);
+      if (i >= routingDraft.fallback.length - 1) return;
+      const a = routingDraft.fallback;
+      [a[i + 1], a[i]] = [a[i], a[i + 1]];
+      renderRouting();
+    }));
+    fbBox.querySelectorAll('button.routing-fb-del').forEach((el) => el.addEventListener('click', () => {
+      routingDraft.fallback.splice(Number(el.dataset.idx), 1);
+      renderRouting();
+    }));
+  }
+  const disBox = document.getElementById('routing-disabled');
+  if (disBox) {
+    disBox.innerHTML = routingDraft.disabled.map((key, idx) => '<li style="margin:4px 0;display:flex;gap:6px;align-items:center">'
+      + '<select class="routing-dis" data-idx="' + idx + '" style="max-width:300px;padding:3px 6px;border-radius:5px;border:1px solid var(--line);background:#0b0d11;color:var(--text);font-size:12px"' + (noOptions ? ' disabled' : '') + '>'
+      + routingOptionsHtml(key) + '</select>'
+      + '<button class="routing-dis-del" data-idx="' + idx + '" style="padding:1px 8px;border-radius:5px;border:1px solid #a33;background:#3a1515;color:#ff9d9d;cursor:pointer">✕</button>'
+      + '</li>').join('');
+    disBox.querySelectorAll('select.routing-dis').forEach((el) => el.addEventListener('change', () => {
+      routingDraft.disabled[Number(el.dataset.idx)] = el.value;
+      renderRouting();
+    }));
+    disBox.querySelectorAll('button.routing-dis-del').forEach((el) => el.addEventListener('click', () => {
+      routingDraft.disabled.splice(Number(el.dataset.idx), 1);
+      renderRouting();
+    }));
+  }
+  const eff = routingData.effective || null;
+  const effEl = document.getElementById('routing-effective');
+  if (effEl) {
+    const key = routingKey(eff);
+    const src = eff && eff.source ? (ROUTING_SOURCE[eff.source] || eff.source) : '未知';
+    effEl.textContent = '当前实际使用：' + (key || '后端未提供') + '（来源：' + src + '）';
+  }
+  const statsEl = document.getElementById('routing-stats');
+  if (statsEl) { statsEl.textContent = routingStats; statsEl.hidden = !routingStats; }
+  const dirtyEl = document.getElementById('routing-dirty');
+  if (dirtyEl) dirtyEl.textContent = routingDirty() ? '有未保存修改' : '';
+  const saveBtn = document.getElementById('routing-save');
+  if (saveBtn) saveBtn.disabled = noOptions;
+  const hint = document.getElementById('routing-hint');
+  if (hint) hint.textContent = noOptions ? 'DSH 清单不可用，可稍后刷新' : '';
+}
+async function loadRouting() {
+  let data = null;
+  let err = null;
+  try {
+    const r = await fetch('/api/model-routing' + (token ? '?token=' + encodeURIComponent(token) : ''), { cache: 'no-store' });
+    const text = await r.text();
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    if (!text.trim()) throw new Error('HTTP ' + r.status + '，响应为空');
+    try { data = JSON.parse(text); } catch { throw new Error('HTTP ' + r.status + '，返回的不是 JSON'); }
+  } catch (e) { err = e; }
+  if (!data) {
+    const reason = '读取失败：GET /api/model-routing ' + (err && err.message ? err.message : '未知错误');
+    if (routingData) {
+      // 已经成功加载过：刷新失败只提示，**不清数据、不清下拉**。
+      // 之前这里把 routingData 置空，保存后只要 GET 抖一下，整块就被 body.hidden 收掉 ——
+      // 用户看到的就是「保存完选项栏直接空了」。
+      const warn = document.getElementById('routing-warn');
+      if (warn) { warn.hidden = false; warn.textContent = reason + '（显示的是上次成功读取的数据）'; }
+      renderRouting();
+      return;
+    }
+    routingData = null;
+    routingErr = reason;
+    renderRouting();
+    return;
+  }
+  routingData = data;
+  const warnEl = document.getElementById('routing-warn');
+  if (warnEl) { warnEl.hidden = true; warnEl.textContent = ''; }
+  // 清单为空时不要清掉旧选项：DSH 探测会瞬时失败，清空会让下拉整片变灰（实测保存后出现）。
+  if (Array.isArray(data.options) && data.options.length) {
+    routingOptions = data.options;
+    routingHasCatalog = true;
+  }
+  // 连旧选项都没有（首次加载就空清单）时，用 routing 里出现的值兜底成「不在清单」项，
+  // 保证 select 至少有当前值可显示，而不是空白下拉。
+  if (!routingOptions.length) {
+    const seen = new Set();
+    const add = (v) => {
+      const key = routingKey(v);
+      if (!key || seen.has(key)) return;
+      seen.add(key);
+      routingOptions.push({ provider: key.split('/')[0] || '', model: key.split('/').slice(1).join('/') || key, label: '（不在清单）' });
+    };
+    const r1 = data.routing || {};
+    add(r1.idle); add(r1.peak);
+    for (const x of (r1.fallback || [])) add(x);
+    for (const x of (r1.disabled || [])) add(x);
+  }
+  const r0 = data.routing || {};
+  routingDraft = {
+    idle: routingKey(r0.idle),
+    peak: routingKey(r0.peak),
+    fallback: (r0.fallback || []).map(routingKey).filter(Boolean),
+    disabled: (r0.disabled || []).map(routingKey).filter(Boolean),
+    peakPauseEnabled: Boolean(data.peakPause && data.peakPause.enabled),
+  };
+  routingErr = '';
+  // 高峰期只读统计（回复数/耗时/最后一条）来自 /api/status.peakLocal，拿不到就不显示
+  routingStats = '';
+  try {
+    const r2 = await fetch('/api/status' + (token ? '?token=' + encodeURIComponent(token) : ''), { cache: 'no-store' });
+    if (r2.ok) {
+      const st = await r2.json();
+      const pl = st && st.peakLocal;
+      if (pl) {
+        const bits = [];
+        if (Number.isFinite(Number(pl.repliesLastHour))) bits.push('近 1 小时 ' + Number(pl.repliesLastHour) + ' 次');
+        if (Number.isFinite(Number(pl.avgMs))) bits.push('均耗时 ' + Math.round(Number(pl.avgMs)) + ' ms');
+        if (pl.lastReplyText) bits.push('最后：' + String(pl.lastReplyText).replace(/\s+/g, ' ').slice(0, 60) + (String(pl.lastReplyText).length > 60 ? '…' : ''));
+        routingStats = bits.join(' · ');
+      }
+    }
+  } catch { /* 统计拿不到就不显示，不影响路由 */ }
+  renderRouting();
+}
+async function saveRouting(btn) {
+  if (!routingDraft) return;
+  return opsBusy(btn, async () => {
+    const started = Date.now();
+    const msg = document.getElementById('routing-msg');
+    if (msg) { msg.style.color = 'var(--dim)'; msg.textContent = '保存中…'; }
+    const payload = {
+      idle: routingDraft.idle,
+      peak: routingDraft.peak,
+      fallback: routingDraft.fallback.slice(),
+      disabled: routingDraft.disabled.slice(),
+      peakPauseEnabled: routingDraft.peakPauseEnabled,
+    };
+    try {
+      const r = await fetch('/api/model-routing' + (token ? '?token=' + encodeURIComponent(token) : ''), {
+        method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload)
+      });
+      const text = await r.text();
+      let out = null;
+      try { out = JSON.parse(text); } catch { out = null; }
+      if (!r.ok || !out || out.ok !== true) {
+        const detail = (out && out.error) || text.slice(0, 140) || ('HTTP ' + r.status);
+        if (msg) { msg.style.color = '#ff9d9d'; msg.textContent = '保存失败：' + detail; }
+        return;
+      }
+      if (msg) { msg.style.color = '#7dffb0'; msg.textContent = '已保存（下一轮生效）'; }
+      // POST 响应可能带回新的 routing（也可能没有 options）：先就地更新草稿与只读区，
+      // 这样即使紧接着的 GET 失败/变慢，下拉和选中值也不会丢。
+      if (out.routing && routingData) {
+        routingData.routing = out.routing;
+        if (out.peakPause) routingData.peakPause = { ...(routingData.peakPause || {}), ...out.peakPause };
+        if (out.effective) routingData.effective = out.effective;
+        routingDraft = {
+          idle: routingKey(out.routing.idle),
+          peak: routingKey(out.routing.peak),
+          fallback: (out.routing.fallback || []).map(routingKey).filter(Boolean),
+          disabled: (out.routing.disabled || []).map(routingKey).filter(Boolean),
+          peakPauseEnabled: Boolean((out.peakPause || routingData.peakPause || {}).enabled),
+        };
+        renderRouting();
+      }
+      await loadRouting();
+    } catch (e) {
+      if (msg) { msg.style.color = '#ff9d9d'; msg.textContent = '保存失败：POST /api/model-routing — ' + (e && e.message ? e.message : e); }
+    } finally {
+      const left = 1000 - (Date.now() - started);
+      if (left > 0) await new Promise((r) => setTimeout(r, left));
+    }
+  });
+}
+// 事件：暂存类控件在 renderRouting 里重建，这里只绑固定的几个
+document.getElementById('routing-peak-enabled')?.addEventListener('change', (e) => {
+  if (!routingDraft) return;
+  routingDraft.peakPauseEnabled = Boolean(e.currentTarget.checked);
+  renderRouting();
+});
+document.getElementById('routing-idle')?.addEventListener('change', (e) => {
+  if (!routingDraft) return;
+  routingDraft.idle = String(e.currentTarget.value || '');
+  renderRouting();
+});
+document.getElementById('routing-peak')?.addEventListener('change', (e) => {
+  if (!routingDraft) return;
+  routingDraft.peak = String(e.currentTarget.value || '');
+  renderRouting();
+});
+document.getElementById('routing-fallback-add')?.addEventListener('click', () => {
+  if (!routingDraft || routingDraft.fallback.length >= ROUTING_MAX_FALLBACK) return;
+  const first = routingOptions[0] ? routingKey(routingOptions[0]) : '';
+  routingDraft.fallback.push(first);
+  renderRouting();
+});
+document.getElementById('routing-disabled-add')?.addEventListener('click', () => {
+  if (!routingDraft) return;
+  const first = routingOptions[0] ? routingKey(routingOptions[0]) : '';
+  routingDraft.disabled.push(first);
+  renderRouting();
+});
+document.getElementById('routing-save')?.addEventListener('click', (ev) => saveRouting(ev.currentTarget));
+loadRouting();
+
+// ── AI 黑名单（D70）──────────────────────────────────────────────────────
+async function aiblRequest(method, body) {
+  const url = '/api/socialV2/ai-blacklist' + (token ? '?token=' + encodeURIComponent(token) : '');
+  const r = await fetch(url, {
+    method, cache: 'no-store',
+    headers: body ? { 'content-type': 'application/json' } : {},
+    body: body ? JSON.stringify(body) : undefined
+  });
+  const text = await r.text();
+  let data = null;
+  try { data = JSON.parse(text); } catch {}
+  if (!r.ok || !data || data.ok !== true) throw new Error((data && (data.error || data.code)) || ('HTTP ' + r.status));
+  return data;
+}
+function renderAiBlacklist(data) {
+  const enabled = document.getElementById('aibl-enabled');
+  if (enabled) enabled.checked = data.enabled === true;
+  const list = document.getElementById('aibl-list');
+  const stats = document.getElementById('aibl-stats');
+  if (stats) {
+    stats.textContent = '今日跳过 ' + Number(data.stats?.skippedToday || 0) + ' 次 · 模式 ' + (data.mode === 'silent' ? 'silent（连 @ 都不回）' : 'reduce（降频）')
+      + ' · 冷却 ' + Math.round(Number(data.minIntervalMs || 0) / 60000) + ' 分钟 / 每小时最多 ' + Number(data.perHourMax ?? 0) + ' 次';
+  }
+  if (!list) return;
+  const rows = Array.isArray(data.qq) ? data.qq : [];
+  if (!rows.length) { list.innerHTML = '<div class="dim" style="font-size:12px;padding:6px 0">还没有登记任何 AI QQ。</div>'; return; }
+  list.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="text-align:left;color:var(--dim);font-size:12px">'
+    + '<th style="padding:6px 8px">QQ</th><th style="padding:6px 8px">备注</th><th style="padding:6px 8px">添加时间</th><th style="padding:6px 8px">操作</th></tr></thead><tbody>'
+    + rows.map((e) => '<tr style="border-top:1px solid var(--line)">'
+      + '<td style="padding:6px 8px"><code>' + esc(e.id) + '</code></td>'
+      + '<td style="padding:6px 8px">' + (e.note ? esc(e.note) : '<span class="dim">—</span>') + '</td>'
+      + '<td style="padding:6px 8px" class="dim">' + (e.addedAt ? esc(new Date(e.addedAt).toLocaleString()) : '—') + '</td>'
+      + '<td style="padding:6px 8px"><button data-aibl-remove="' + esc(e.id) + '" style="padding:3px 10px;border-radius:6px;border:1px solid var(--line);background:#1d222c;color:var(--text);cursor:pointer;font-size:12px">删除</button></td>'
+      + '</tr>').join('') + '</tbody></table>';
+  for (const btn of list.querySelectorAll('[data-aibl-remove]')) {
+    btn.addEventListener('click', () => aiBlacklistAction({ action: 'remove', qq: btn.getAttribute('data-aibl-remove') }));
+  }
+}
+async function loadAiBlacklist() {
+  const msg = document.getElementById('aibl-msg');
+  try {
+    const data = await aiblRequest('GET');
+    if (msg) { msg.textContent = ''; msg.style.color = ''; }
+    renderAiBlacklist(data);
+  } catch (error) {
+    if (msg) { msg.textContent = '⚠️ 读取失败：' + (error && error.message ? error.message : String(error)); msg.style.color = '#ff9d9d'; }
+  }
+}
+async function aiBlacklistAction(payload) {
+  const msg = document.getElementById('aibl-msg');
+  try {
+    const data = await aiblRequest('POST', payload);
+    renderAiBlacklist(data);
+    if (msg) { msg.textContent = '已保存（热加载生效）'; msg.style.color = 'var(--ok)'; }
+    if (payload.action === 'add') {
+      const q = document.getElementById('aibl-qq'); if (q) q.value = '';
+      const n = document.getElementById('aibl-note'); if (n) n.value = '';
+    }
+  } catch (error) {
+    if (msg) { msg.textContent = '⚠️ 保存失败：' + (error && error.message ? error.message : String(error)); msg.style.color = '#ff9d9d'; }
+  }
+}
+document.getElementById('aibl-add')?.addEventListener('click', () => {
+  const qq = (document.getElementById('aibl-qq')?.value || '').trim();
+  const note = (document.getElementById('aibl-note')?.value || '').trim();
+  if (!/^\d{5,12}$/.test(qq)) {
+    const m = document.getElementById('aibl-msg');
+    if (m) { m.textContent = 'QQ 号必须是 5~12 位数字'; m.style.color = '#ff9d9d'; }
+    return;
+  }
+  aiBlacklistAction({ action: 'add', qq, note });
+});
+document.getElementById('aibl-refresh')?.addEventListener('click', () => loadAiBlacklist());
+document.getElementById('aibl-enabled')?.addEventListener('change', (e) => aiBlacklistAction({ action: 'toggle', enabled: Boolean(e.currentTarget.checked) }));
+loadAiBlacklist();
+
+// 轮询：只刷只读状态（不动本地草稿），避免把运维正在改的选择冲掉
+let peakPollTimer = null;
+function ensurePeakPolling() {
+  if (peakPollTimer) return peakPollTimer;
+  peakPollTimer = setInterval(() => {
+    if (!routingDraft || !routingDirty()) loadRouting().catch(() => {});
+  }, 30000);
+  return peakPollTimer;
+}
+
+// ── 周期任务与页面可见性 ────────────────────────────────────────────────────
+// 页面不可见（切标签页 / 最小化）时暂停轮询：状态表 2 秒一轮、服务表 5 秒一轮，
+// 后台开着纯属浪费，桥接重启窗口期还会连打失败。回前台立刻补一次再恢复。
+// 这是「暂停」不是「停用」——visibilitychange 回前台一定会重新 opsStartPolling()。
+let opsPollTimers = [];
+function opsStartPolling() {
+  if (opsPollTimers.length) return;   // 只建一次，重复调用不会叠加定时器
+  opsPollTimers = [setInterval(tick, 2000), setInterval(tickServices, 5000), ensurePeakPolling()];
+}
+function opsStopPolling() {
+  for (const t of opsPollTimers) clearInterval(t);
+  opsPollTimers = [];
+  peakPollTimer = null;   // 让 ensurePeakPolling 在恢复时能重建
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { opsStopPolling(); return; }
+  tick(); tickServices(); loadRouting(); loadAiBlacklist();   // 后台期间的数据可能已经过期，先补一次
+  opsStartPolling();
+});
+// ── 机器人自检（九组）────────────────────────────────────────────────────────
+// 结果按 fail → warn → ok 排，每条都带服务端给的证据与一句话建议；全部走 esc() 转义后再插 DOM。
+const SELF_CHECK_TITLE = { ports: '端口/进程', snowluma: 'SnowLuma 网关', dsh: 'DSH 运行时', bridge: '桥接', storage: '存储', config: '配置', tasks: '计划任务', disk_logs: '磁盘/日志', version: '版本/进程新鲜度' };
+function selfCheckBadge(status) {
+  if (status === 'fail') return '✗ fail';
+  if (status === 'warn') return '⚠ warn';
+  return '✓ ok';
+}
+function selfCheckColor(status) {
+  if (status === 'fail') return '#ff9d9d';
+  if (status === 'warn') return '#ffd479';
+  return '#7ddc9a';
+}
+function renderSelfCheck(report) {
+  const box = document.getElementById('selfcheck-groups');
+  const sum = document.getElementById('selfcheck-summary');
+  if (!box || !report) return;
+  const c = report.counts || {};
+  sum.textContent = '自检时间 ' + new Date(report.at).toLocaleString('zh-CN', { hour12: false })
+    + ' · 耗时 ' + (report.tookMs || 0) + ' ms · ok ' + (c.ok || 0) + ' / warn ' + (c.warn || 0) + ' / fail ' + (c.fail || 0);
+  sum.style.color = report.ok ? '' : '#ff9d9d';
+  box.innerHTML = '';
+  const order = { fail: 0, warn: 1, ok: 2 };
+  const groups = (report.groups || []).slice().sort((a, b) => (order[a.status] ?? 9) - (order[b.status] ?? 9));
+  for (const g of groups) {
+    const card = document.createElement('div');
+    card.style.cssText = 'border-left:3px solid ' + selfCheckColor(g.status) + ';padding:6px 10px;margin-bottom:8px;background:#0d1117;border-radius:4px';
+    const head = document.createElement('div');
+    head.style.cssText = 'font-weight:600;color:' + selfCheckColor(g.status);
+    head.textContent = selfCheckBadge(g.status) + ' [' + g.id + '] ' + (SELF_CHECK_TITLE[g.id] || g.title);
+    const summary = document.createElement('div');
+    summary.style.cssText = 'margin:2px 0 4px';
+    summary.textContent = g.summary || '';
+    card.appendChild(head);
+    card.appendChild(summary);
+    for (const line of g.evidence || []) {
+      const li = document.createElement('div');
+      li.style.cssText = 'padding-left:10px;opacity:.85';
+      li.textContent = '· ' + line;
+      card.appendChild(li);
+    }
+    if (g.suggestion) {
+      const sg = document.createElement('div');
+      sg.style.cssText = 'margin-top:4px;color:#9fd0ff';
+      sg.textContent = '→ ' + g.suggestion;
+      card.appendChild(sg);
+    }
+    box.appendChild(card);
+  }
+}
+async function loadLastSelfCheck() {
+  try {
+    const res = await fetch('/api/self-check/last' + (token ? '?token=' + encodeURIComponent(token) : ''), { headers: token ? { 'x-console-token': token } : {} });
+    if (!res.ok) return; // 404 = 还没跑过，保持提示文案，不报错
+    const data = await res.json();
+    if (data && data.ok && data.report) renderSelfCheck(data.report);
+  } catch { /* 面板其它部分照常工作 */ }
+}
+async function runSelfCheckNow() {
+  const btn = document.getElementById('selfcheck-run');
+  const msg = document.getElementById('selfcheck-msg');
+  if (btn) { btn.disabled = true; btn.textContent = '自检中…'; }
+  if (msg) { msg.textContent = '正在逐项探测（端口/网关/DSH/桥接/存储/配置/任务/日志/版本）…'; msg.style.color = ''; }
+  try {
+    const res = await fetch('/api/self-check' + (token ? '?token=' + encodeURIComponent(token) : ''), {
+      method: 'POST',
+      headers: Object.assign({ 'content-type': 'application/json' }, token ? { 'x-console-token': token } : {})
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) throw new Error(data.error || ('HTTP ' + res.status));
+    renderSelfCheck(data.report);
+    if (msg) msg.textContent = data.report.ok ? '完成：没有 fail 项。' : '完成：有 fail 项，按每条的「→」处置。';
+  } catch (error) {
+    if (msg) { msg.textContent = '⚠️ 自检失败：' + (error && error.message ? error.message : String(error)); msg.style.color = '#ff9d9d'; }
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '运行自检'; }
+  }
+}
+document.getElementById('selfcheck-run').addEventListener('click', runSelfCheckNow);
+loadLastSelfCheck();
+opsStartPolling();
+</script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+{
+  "note": "存量技术债基线：只许变小不许变大。新增文件>800行或新增函数>300行直接红。收紧后用 --update 重写。",
+  "updatedAt": "2026-11-03T01:10:14.350Z",
+  "limits": {
+    "file": 800,
+    "entryFile": 4500,
+    "func": 300,
+    "htmlFile": 6500
+  },
+  "files": [
+    {
+      "file": "client/04-usage.js",
+      "lines": 1848
+    },
+    {
+      "file": "client/01-shell.js",
+      "lines": 1837
+    }
+  ],
+  "functions": []
+}
